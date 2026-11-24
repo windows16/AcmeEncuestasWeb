@@ -1,0 +1,230 @@
+﻿@model AcmeEncuestasWeb.ViewModels.EncuestaFormViewModel
+@{
+    ViewBag.Title = "Modificar Encuesta";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container my-4" style="max-width: 900px;">
+    <!-- Encabezado -->
+    <div class="mb-4">
+        <a href="@Url.Action("Index", "Encuesta")" class="text-decoration-none small text-muted mb-2 d-inline-block">
+            &larr; Volver al listado
+        </a>
+        <h2 class="fw-bold mb-1">Modificar Encuesta</h2>
+        <p class="text-muted small mb-0">Actualice el nombre, la descripción o la estructura de campos dinámicos.</p>
+    </div>
+
+    @using (Html.BeginForm("Editar", "Encuesta", FormMethod.Post, new { id = "formEncuesta", role = "form" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(m => m.EncuestaId)
+        @Html.HiddenFor(m => m.LinkUnico)
+
+        @Html.ValidationSummary(true, "", new { @class = "alert alert-danger py-2 small mb-4" })
+
+        <!-- Tarjeta: Enlace de Llenado Generado -->
+        <div class="card border-0 shadow-sm mb-4 bg-light">
+            <div class="card-body p-3">
+                <label class="form-label fw-bold text-secondary small mb-1">Enlace Único de Llenado (Público)</label>
+                <div class="input-group">
+                    <input type="text" class="form-control font-monospace bg-white" 
+                           value="@Model.UrlPublica" readonly id="linkPublicoEdit" />
+                    <button class="btn btn-outline-secondary" type="button" 
+                            onclick="copiarEnlace('linkPublicoEdit', this)">
+                        Copiar Enlace
+                    </button>
+                </div>
+                <small class="text-muted">Cualquier participante puede ingresar a este link para responder la encuesta sin necesidad de iniciar sesión.</small>
+            </div>
+        </div>
+
+        <!-- Tarjeta 1: Información General -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light py-3">
+                <h5 class="fw-bold mb-0 text-dark">1. Información de la Encuesta</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="mb-3">
+                    @Html.LabelFor(m => m.Nombre, new { @class = "form-label fw-semibold" }) <span class="text-danger">*</span>
+                    @Html.TextBoxFor(m => m.Nombre, new { 
+                        @class = "form-control", 
+                        placeholder = "Nombre de la encuesta",
+                        autofocus = "autofocus"
+                    })
+                    @Html.ValidationMessageFor(m => m.Nombre, "", new { @class = "text-danger small d-block mt-1" })
+                </div>
+
+                <div class="mb-0">
+                    @Html.LabelFor(m => m.Descripcion, new { @class = "form-label fw-semibold" })
+                    @Html.TextAreaFor(m => m.Descripcion, new { 
+                        @class = "form-control", 
+                        rows = 3, 
+                        placeholder = "Descripción u objetivo (opcional)" 
+                    })
+                    @Html.ValidationMessageFor(m => m.Descripcion, "", new { @class = "text-danger small d-block mt-1" })
+                </div>
+            </div>
+        </div>
+
+        <!-- Tarjeta 2: Listado de Campos Dinámicos -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light py-3 d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0 text-dark">2. Listado de Campos</h5>
+                <button type="button" class="btn btn-outline-primary btn-sm fw-semibold" id="btnAgregarCampo">
+                    + Agregar Campo
+                </button>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted small mb-3">
+                    Modifique o agregue los campos dinámicos solicitados para esta encuesta.
+                </p>
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle" id="tablaCampos">
+                        <thead class="table-light small">
+                            <tr>
+                                <th style="width: 25%;">Nombre del Campo <span class="text-danger">*</span></th>
+                                <th style="width: 35%;">Título en Pantalla <span class="text-danger">*</span></th>
+                                <th style="width: 20%;">Tipo de Campo <span class="text-danger">*</span></th>
+                                <th style="width: 10%;" class="text-center">Requerido</th>
+                                <th style="width: 10%;" class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="contenedorCampos">
+                            @if (Model.Campos != null && Model.Campos.Any())
+                            {
+                                for (int i = 0; i < Model.Campos.Count; i++)
+                                {
+                                    <tr class="fila-campo">
+                                        <td>
+                                            <input type="text" name="Campos[@i].NombreCampo" 
+                                                   class="form-control form-control-sm campo-nombre" 
+                                                   placeholder="ej. Telefono" 
+                                                   value="@Model.Campos[i].NombreCampo" required />
+                                        </td>
+                                        <td>
+                                            <input type="text" name="Campos[@i].TituloCampo" 
+                                                   class="form-control form-control-sm campo-titulo" 
+                                                   placeholder="ej. Número de Teléfono" 
+                                                   value="@Model.Campos[i].TituloCampo" required />
+                                        </td>
+                                        <td>
+                                            <select name="Campos[@i].TipoCampoId" class="form-select form-select-sm campo-tipo">
+                                                <option value="1" @(Model.Campos[i].TipoCampoId == 1 ? "selected" : "")>Texto</option>
+                                                <option value="2" @(Model.Campos[i].TipoCampoId == 2 ? "selected" : "")>Número</option>
+                                                <option value="3" @(Model.Campos[i].TipoCampoId == 3 ? "selected" : "")>Fecha</option>
+                                            </select>
+                                        </td>
+                                        <td class="text-center">
+                                            <input type="checkbox" name="Campos[@i].EsRequerido" value="true" 
+                                                   class="form-check-input campo-requerido" 
+                                                   @(Model.Campos[i].EsRequerido ? "checked" : "") />
+                                            <input type="hidden" name="Campos[@i].EsRequerido" value="false" />
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-outline-danger btn-sm btn-eliminar-fila" title="Quitar campo">
+                                                &times;
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Acciones Finales -->
+        <div class="d-flex justify-content-end gap-2 mb-5">
+            <a href="@Url.Action("Index", "Encuesta")" class="btn btn-light px-4 border">
+                Cancelar
+            </a>
+            <button type="submit" class="btn btn-primary px-4 fw-semibold">
+                Guardar Cambios
+            </button>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        function copiarEnlace(inputId, btn) {
+            var input = document.getElementById(inputId);
+            if (!input) return;
+
+            input.select();
+            input.setSelectionRange(0, 99999);
+
+            navigator.clipboard.writeText(input.value).then(function () {
+                var textoOriginal = btn.innerText;
+                btn.innerText = "¡Copiado!";
+                btn.classList.remove("btn-outline-secondary");
+                btn.classList.add("btn-success");
+
+                setTimeout(function () {
+                    btn.innerText = textoOriginal;
+                    btn.classList.remove("btn-success");
+                    btn.classList.add("btn-outline-secondary");
+                }, 2000);
+            }).catch(function () {
+                document.execCommand("copy");
+            });
+        }
+
+        $(document).ready(function () {
+            function reindexarCampos() {
+                $("#contenedorCampos tr.fila-campo").each(function (index) {
+                    $(this).find(".campo-nombre").attr("name", "Campos[" + index + "].NombreCampo");
+                    $(this).find(".campo-titulo").attr("name", "Campos[" + index + "].TituloCampo");
+                    $(this).find(".campo-tipo").attr("name", "Campos[" + index + "].TipoCampoId");
+                    $(this).find("input[type='checkbox'].campo-requerido").attr("name", "Campos[" + index + "].EsRequerido");
+                    $(this).find("input[type='hidden']").attr("name", "Campos[" + index + "].EsRequerido");
+                });
+            }
+
+            $("#btnAgregarCampo").on("click", function () {
+                var nuevaFila = `
+                    <tr class="fila-campo">
+                        <td>
+                            <input type="text" class="form-control form-control-sm campo-nombre" placeholder="ej. Correo" required />
+                        </td>
+                        <td>
+                            <input type="text" class="form-control form-control-sm campo-titulo" placeholder="ej. Correo Electrónico" required />
+                        </td>
+                        <td>
+                            <select class="form-select form-select-sm campo-tipo">
+                                <option value="1">Texto</option>
+                                <option value="2">Número</option>
+                                <option value="3">Fecha</option>
+                            </select>
+                        </td>
+                        <td class="text-center">
+                            <input type="checkbox" value="true" class="form-check-input campo-requerido" />
+                            <input type="hidden" value="false" />
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-outline-danger btn-sm btn-eliminar-fila" title="Quitar campo">
+                                &times;
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                $("#contenedorCampos").append(nuevaFila);
+                reindexarCampos();
+            });
+
+            $("#contenedorCampos").on("click", ".btn-eliminar-fila", function () {
+                if ($("#contenedorCampos tr.fila-campo").length <= 1) {
+                    alert("La encuesta debe tener al menos un campo.");
+                    return;
+                }
+                $(this).closest("tr").remove();
+                reindexarCampos();
+            });
+        });
+    </script>
+}
+

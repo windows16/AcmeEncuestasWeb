@@ -21,6 +21,7 @@
             <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
                 <ul class="navbar-nav flex-grow-1">
                     <li>@Html.ActionLink("Panel de Control", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
+                    <li>@Html.ActionLink("Encuestas", "Index", "Encuesta", new { area = "" }, new { @class = "nav-link" })</li>
                 </ul>
                 @Html.Partial("_LoginPartial")
             </div>
@@ -40,3 +41,4 @@
     @RenderSection("scripts", required: false)
 </body>
 </html>
+

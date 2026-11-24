@@ -132,6 +132,17 @@
     <Compile Include="Services\AuthService.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
+    <Compile Include="Models\TipoCampo.cs" />
+    <Compile Include="Models\CampoEncuesta.cs" />
+    <Compile Include="Models\Encuesta.cs" />
+    <Compile Include="Models\RespuestaEncuesta.cs" />
+    <Compile Include="Models\ValorCampo.cs" />
+    <Compile Include="ViewModels\CampoEditorViewModel.cs" />
+    <Compile Include="ViewModels\EncuestaFormViewModel.cs" />
+    <Compile Include="ViewModels\EncuestaItemViewModel.cs" />
+    <Compile Include="Data\EncuestaRepository.cs" />
+    <Compile Include="Services\EncuestaService.cs" />
+    <Compile Include="Controllers\EncuestaController.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.css" />
@@ -166,6 +177,11 @@
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="ScriptsSQL\01_CreacionBaseDatosYUsuarios.sql" />
     <Content Include="Views\Error\NotFound.cshtml" />
+    <Content Include="ScriptsSQL\AcmeEncuestasDB.sql" />
+    <Content Include="Views\Encuesta\Index.cshtml" />
+    <Content Include="Views\Encuesta\Crear.cshtml" />
+    <Content Include="Views\Encuesta\Editar.cshtml" />
+    <Content Include="Views\Encuesta\Eliminar.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

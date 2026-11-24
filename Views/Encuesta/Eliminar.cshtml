@@ -1,0 +1,47 @@
+﻿@model AcmeEncuestasWeb.ViewModels.EncuestaFormViewModel
+@{
+    ViewBag.Title = "Eliminar Encuesta";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container my-5" style="max-width: 650px;">
+    <div class="card border-danger shadow-sm">
+        <div class="card-header bg-danger text-white py-3">
+            <h5 class="fw-bold mb-0">Confirmar Eliminación de Encuesta</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="alert alert-warning py-2 small mb-4">
+                <strong>Atención:</strong> Esta acción es irreversible. Al eliminar la encuesta se eliminarán permanentemente todos sus campos configurados y los datos de respuestas.
+            </div>
+
+            <h5 class="fw-bold text-dark mb-1">@Model.Nombre</h5>
+            <p class="text-muted small mb-3">
+                @(string.IsNullOrWhiteSpace(Model.Descripcion) ? "Sin descripción" : Model.Descripcion)
+            </p>
+
+            <div class="bg-light p-3 rounded mb-4">
+                <span class="fw-semibold small d-block mb-1">Campos configurados (@Model.Campos.Count):</span>
+                <ul class="small text-muted mb-0 ps-3">
+                    @foreach (var campo in Model.Campos)
+                    {
+                        <li><strong>@campo.TituloCampo</strong> (@campo.NombreCampo) - @(campo.TipoCampoId == 1 ? "Texto" : campo.TipoCampoId == 2 ? "Número" : "Fecha") @(campo.EsRequerido ? "[Requerido]" : "")</li>
+                    }
+                </ul>
+            </div>
+
+            @using (Html.BeginForm("Eliminar", "Encuesta", new { id = Model.EncuestaId }, FormMethod.Post, new { role = "form" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="@Url.Action("Index", "Encuesta")" class="btn btn-light border px-3">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-danger px-4 fw-semibold">
+                        Sí, Eliminar Definitivamente
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
