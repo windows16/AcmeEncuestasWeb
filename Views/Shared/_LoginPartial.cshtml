@@ -1,0 +1,21 @@
+@if (Request.IsAuthenticated)
+{
+    <ul class="navbar-nav navbar-right">
+        <li class="nav-item">
+            <span class="nav-link text-light">
+                <i class="glyphicon glyphicon-user"></i> Hola, @(Session["NombreCompleto"] != null ? Session["NombreCompleto"].ToString() : User.Identity.Name)!
+            </span>
+        </li>
+        <li class="nav-item">
+            @Html.ActionLink("Cerrar Sesión", "Logout", "Account", routeValues: null, htmlAttributes: new { @class = "nav-link text-warning" })
+        </li>
+    </ul>
+}
+else
+{
+    <ul class="navbar-nav navbar-right">
+        <li class="nav-item">
+            @Html.ActionLink("Iniciar Sesión", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink", @class = "nav-link" })
+        </li>
+    </ul>
+}

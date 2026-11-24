@@ -1,0 +1,21 @@
+﻿@{
+    ViewBag.Title = "Panel Principal";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row" style="margin-top: 30px;">
+    <div class="col-md-12">
+        <div class="jumbotron" style="background-color: #f8f9fa; border-radius: 8px; padding: 40px; border-left: 6px solid #2980b9;">
+            <h1 style="font-size: 32px; font-weight: bold; color: #2c3e50;">
+                <i class="glyphicon glyphicon-stats"></i> Bienvenido al Panel de Encuestas Acme
+            </h1>
+            <p class="lead" style="color: #7f8c8d; margin-top: 15px;">
+                Ha iniciado sesión exitosamente como <strong>@(Session["NombreCompleto"] != null ? Session["NombreCompleto"].ToString() : User.Identity.Name)</strong>.
+            </p>
+            <hr />
+            <p style="color: #555;">
+                Desde este panel podrá crear, modificar y consultar los resultados de las encuestas dinámicas para el cliente Acme.
+            </p>
+        </div>
+    </div>
+</div>

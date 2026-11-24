@@ -1,0 +1,75 @@
+@model AcmeEncuestasWeb.ViewModels.LoginViewModel
+@{
+    ViewBag.Title = "Iniciar Sesión";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row" style="margin-top: 50px;">
+    <div class="col-md-6 col-md-offset-3">
+        <div class="panel panel-default" style="box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px;">
+            <div class="panel-heading text-center" style="background-color: #2c3e50; color: #ffffff; border-top-left-radius: 8px; border-top-right-radius: 8px; padding: 20px;">
+                <h3 class="panel-title" style="font-size: 22px; font-weight: bold;">
+                    <i class="glyphicon glyphicon-lock"></i> Plataforma de Encuestas Acme
+                </h3>
+                <small style="color: #bdc3c7;">Ingrese sus credenciales para acceder</small>
+            </div>
+            <div class="panel-body" style="padding: 30px;">
+                @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+                {
+                    @Html.AntiForgeryToken()
+
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Username, new { @class = "col-md-3 control-label" })
+                        <div class="col-md-9">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
+                                @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Nombre de usuario", autofocus = "autofocus" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        @Html.LabelFor(m => m.Password, new { @class = "col-md-3 control-label" })
+                        <div class="col-md-9">
+                            <div class="input-group">
+                                <span class="input-group-addon"><i class="glyphicon glyphicon-asterisk"></i></span>
+                                @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Contraseña" })
+                            </div>
+                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-md-offset-3 col-md-9">
+                            <div class="checkbox">
+                                <label>
+                                    @Html.CheckBoxFor(m => m.Recordarme) @Html.DisplayNameFor(m => m.Recordarme)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 25px;">
+                        <div class="col-md-offset-3 col-md-9">
+                            <button type="submit" class="btn btn-primary btn-block" style="background-color: #2980b9; border: none; padding: 10px; font-size: 16px; font-weight: bold;">
+                                <i class="glyphicon glyphicon-log-in"></i> Iniciar Sesión
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="panel-footer text-center" style="background-color: #f8f9fa;">
+                <small class="text-muted">
+                    <strong>Usuario de prueba:</strong> admin | <strong>Contraseña:</strong> Admin123*
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

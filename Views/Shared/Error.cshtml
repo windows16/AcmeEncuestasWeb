@@ -1,0 +1,24 @@
+﻿@model System.Web.Mvc.HandleErrorInfo
+@{
+    ViewBag.Title = "Error en el servidor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row" style="margin-top: 60px;">
+    <div class="col-md-8 col-md-offset-2 text-center">
+        <div class="alert alert-danger" style="padding: 40px; border-radius: 8px;">
+            <h1 style="font-size: 50px; font-weight: bold; margin-bottom: 20px;">
+                <i class="glyphicon glyphicon-exclamation-sign"></i> 500
+            </h1>
+            <h2>Ha ocurrido un error inesperado</h2>
+            <p class="lead" style="margin-top: 15px;">
+                Ocurrió un problema al procesar su solicitud. El equipo técnico ha sido notificado.
+            </p>
+            <div style="margin-top: 30px;">
+                <a href="@Url.Action("Index", "Home")" class="btn btn-primary btn-lg">
+                    <i class="glyphicon glyphicon-home"></i> Volver al Inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
