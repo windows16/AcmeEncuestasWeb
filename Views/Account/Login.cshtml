@@ -1,76 +1,105 @@
-@model AcmeEncuestasWeb.ViewModels.LoginViewModel
+﻿@model AcmeEncuestasWeb.ViewModels.LoginViewModel
 @{
     ViewBag.Title = "Iniciar Sesión";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="row" style="margin-top: 50px;">
-    <div class="col-md-6 col-md-offset-3">
-        <div class="panel panel-default" style="box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px;">
-            <div class="panel-heading text-center" style="background-color: #2c3e50; color: #ffffff; border-top-left-radius: 8px; border-top-right-radius: 8px; padding: 20px;">
-                <h3 class="panel-title" style="font-size: 22px; font-weight: bold;">
-                    <i class="glyphicon glyphicon-lock"></i> Plataforma de Encuestas Acme
-                </h3>
-                <small style="color: #bdc3c7;">Ingrese sus credenciales para acceder</small>
-            </div>
-            <div class="panel-body" style="padding: 30px;">
-                @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+<div class="d-flex justify-content-center align-items-start mt-5">
+    <div class="w-100" style="max-width: 400px;">
+
+        <div class="card shadow-sm border">
+            <div class="card-body p-4">
+
+                <div class="text-center mb-4">
+                    <h4 class="fw-bold mb-1">Iniciar Sesión</h4>
+                    <p class="text-muted small mb-0">Plataforma de Encuestas Acme</p>
+                </div>
+
+                @using (Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post, new { role = "form" }))
                 {
                     @Html.AntiForgeryToken()
                     @Html.HiddenFor(m => m.ReturnUrl)
 
-                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger" })
+                    @Html.ValidationSummary(true, "", new { @class = "alert alert-danger py-2 small mb-3" })
 
-                    <div class="form-group">
-                        @Html.LabelFor(m => m.Username, new { @class = "col-md-3 control-label" })
-                        <div class="col-md-9">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-user"></i></span>
-                                @Html.TextBoxFor(m => m.Username, new { @class = "form-control", placeholder = "Nombre de usuario", autofocus = "autofocus" })
-                            </div>
-                            @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger" })
-                        </div>
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Username, new { @class = "form-label" })
+                        @Html.TextBoxFor(m => m.Username, new {
+                            @class = "form-control",
+                            placeholder = "Ingrese su usuario",
+                            autofocus = "autofocus"
+                        })
+                        @Html.ValidationMessageFor(m => m.Username, "", new { @class = "text-danger small d-block mt-1" })
                     </div>
 
-                    <div class="form-group">
-                        @Html.LabelFor(m => m.Password, new { @class = "col-md-3 control-label" })
-                        <div class="col-md-9">
-                            <div class="input-group">
-                                <span class="input-group-addon"><i class="glyphicon glyphicon-asterisk"></i></span>
-                                @Html.PasswordFor(m => m.Password, new { @class = "form-control", placeholder = "Contraseña" })
-                            </div>
-                            @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger" })
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <div class="col-md-offset-3 col-md-9">
-                            <div class="checkbox">
-                                <label>
-                                    @Html.CheckBoxFor(m => m.Recordarme) @Html.DisplayNameFor(m => m.Recordarme)
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group" style="margin-top: 25px;">
-                        <div class="col-md-offset-3 col-md-9">
-                            <button type="submit" class="btn btn-primary btn-block" style="background-color: #2980b9; border: none; padding: 10px; font-size: 16px; font-weight: bold;">
-                                <i class="glyphicon glyphicon-log-in"></i> Iniciar Sesión
+                    <div class="mb-3">
+                        @Html.LabelFor(m => m.Password, new { @class = "form-label" })
+                        <div class="position-relative">
+                            @Html.PasswordFor(m => m.Password, new {
+                                @class = "form-control pe-5",
+                                placeholder = "Ingrese su contraseña",
+                                id = "Password"
+                            })
+                            <button type="button"
+                                    id="btnVerPassword"
+                                    title="Mostrar contraseña"
+                                    class="position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-secondary me-2 p-0 d-flex align-items-center"
+                                    style="line-height:1;">
+                                <svg id="iconOjo" xmlns="http://www.w3.org/2000/svg" width="30" height="18" fill="currentColor" viewBox="0 0 16 16">
+                                    <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                                    <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                                </svg>
+                                <svg id="iconOjoTachado" xmlns="http://www.w3.org/2000/svg" width="30" height="18" fill="currentColor" viewBox="0 0 16 16" style="display:none;">
+                                    <path d="M13.359 11.238C15.06 9.72 16 8 16 8s-3-5.5-8-5.5a7.028 7.028 0 0 0-2.79.588l.77.771A5.944 5.944 0 0 1 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.134 13.134 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755-.165.165-.337.328-.517.486l.708.709z"/>
+                                    <path d="M11.297 9.176a3.5 3.5 0 0 0-4.474-4.474l.823.823a2.5 2.5 0 0 1 2.829 2.829l.822.822zm-2.943 1.299.822.822a3.5 3.5 0 0 1-4.474-4.474l.823.823a2.5 2.5 0 0 0 2.829 2.829z"/>
+                                    <path d="M3.35 5.47c-.18.16-.353.322-.518.487A13.134 13.134 0 0 0 1.172 8l.195.288c.335.48.83 1.12 1.465 1.755C4.121 11.332 5.881 12.5 8 12.5c.716 0 1.39-.133 2.02-.36l.77.772A7.029 7.029 0 0 1 8 13.5C3 13.5 0 8 0 8s.939-1.721 2.641-3.238l.708.709zm10.296 8.884-12-12 .708-.708 12 12-.708.708z"/>
+                                </svg>
                             </button>
                         </div>
+                        @Html.ValidationMessageFor(m => m.Password, "", new { @class = "text-danger small d-block mt-1" })
+                    </div>
+
+                    <div class="mb-4 form-check">
+                        @Html.CheckBoxFor(m => m.Recordarme, new { @class = "form-check-input", id = "Recordarme" })
+                        <label class="form-check-label text-muted small" for="Recordarme">
+                            @Html.DisplayNameFor(m => m.Recordarme)
+                        </label>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary py-2">
+                            Iniciar Sesión
+                        </button>
                     </div>
                 }
-            </div>
-            <div class="panel-footer text-center" style="background-color: #f8f9fa;">
-                <small class="text-muted">
-                    <strong>Usuario de prueba:</strong> admin | <strong>Contraseña:</strong> Admin123*
-                </small>
+
             </div>
         </div>
+
+        <p class="text-center text-muted small mt-3">
+            Demo: <strong>admin</strong> / <strong>Admin123*</strong>
+        </p>
+
     </div>
 </div>
 
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
+    <script>
+        document.getElementById('btnVerPassword').addEventListener('click', function () {
+            var input   = document.getElementById('Password');
+            var iconOn  = document.getElementById('iconOjo');
+            var iconOff = document.getElementById('iconOjoTachado');
+            var mostrar = input.type === 'password';
+
+            input.type            = mostrar ? 'text'   : 'password';
+            iconOn.style.display  = mostrar ? 'none'   : 'inline';
+            iconOff.style.display = mostrar ? 'inline' : 'none';
+            this.title            = mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña';
+            input.focus();
+        });
+    </script>
 }
+
+
+

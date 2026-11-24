@@ -9,6 +9,8 @@
     @Scripts.Render("~/bundles/modernizr")
 </head>
 <body>
+    @if (Request.IsAuthenticated)
+    {
     <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark bg-dark">
         <div class="container">
             @Html.ActionLink("Encuestas Acme", "Index", "Home", new { area = "" }, new { @class = "navbar-brand font-weight-bold" })
@@ -18,15 +20,13 @@
             </button>
             <div class="collapse navbar-collapse d-sm-inline-flex justify-content-between">
                 <ul class="navbar-nav flex-grow-1">
-                    @if (Request.IsAuthenticated)
-                    {
-                        <li>@Html.ActionLink("Panel de Control", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
-                    }
+                    <li>@Html.ActionLink("Panel de Control", "Index", "Home", new { area = "" }, new { @class = "nav-link" })</li>
                 </ul>
                 @Html.Partial("_LoginPartial")
             </div>
         </div>
     </nav>
+    }
     <div class="container body-content">
         @RenderBody()
         <hr />
