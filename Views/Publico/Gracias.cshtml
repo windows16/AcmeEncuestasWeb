@@ -1,0 +1,12 @@
+@model AcmeEncuestasWeb.ViewModels.LlenarEncuestaViewModel
+@{
+    ViewBag.Title = "Respuesta enviada";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container my-5" style="max-width: 760px;">
+    <div class="alert alert-success">
+        <h1 class="h4">¡Gracias por responder!</h1>
+        <p class="mb-0">Su respuesta para «@Model.Nombre» se guardó correctamente.</p>
+    </div>
+</div>

@@ -32,7 +32,8 @@ namespace AcmeEncuestasWeb.Services
                 Descripcion = e.Descripcion,
                 LinkUnico = e.LinkUnico,
                 UrlPublica = string.IsNullOrEmpty(baseUrl) ? $"/Publico/Llenar/{e.LinkUnico}" : $"{baseUrl.TrimEnd('/')}/Publico/Llenar/{e.LinkUnico}",
-                TotalCampos = e.Campos?.Count ?? 0,
+                TotalCampos = e.TotalCampos,
+                TotalRespuestas = e.TotalRespuestas,
                 FechaCreacion = e.FechaCreacion,
                 FechaModificacion = e.FechaModificacion
             }).ToList();
@@ -115,6 +116,46 @@ namespace AcmeEncuestasWeb.Services
         public bool Eliminar(int encuestaId, int usuarioId)
         {
             return _encuestaRepository.Eliminar(encuestaId, usuarioId);
+        }
+
+        public LlenarEncuestaViewModel ObtenerParaResponder(string linkUnico)
+        {
+            var encuesta = _encuestaRepository.ObtenerPorLink(linkUnico);
+            if (encuesta == null) return null;
+
+            return new LlenarEncuestaViewModel
+            {
+                EncuestaId = encuesta.EncuestaId,
+                Nombre = encuesta.Nombre,
+                Descripcion = encuesta.Descripcion,
+                LinkUnico = encuesta.LinkUnico,
+                Campos = encuesta.Campos.Select(c => new CampoRespuestaViewModel
+                {
+                    CampoId = c.CampoId,
+                    NombreCampo = c.NombreCampo,
+                    TituloCampo = c.TituloCampo,
+                    EsRequerido = c.EsRequerido,
+                    TipoCampoId = c.TipoCampoId
+                }).ToList()
+            };
+        }
+
+        public int GuardarRespuesta(LlenarEncuestaViewModel model, string ipCliente)
+        {
+            if (model == null) throw new ArgumentNullException(nameof(model));
+
+            var valores = model.Campos != null ? model.Campos.Select(c => new ValorCampo
+            {
+                CampoId = c.CampoId,
+                Valor = c.Valor?.Trim()
+            }).ToList() : new List<ValorCampo>();
+
+            return _encuestaRepository.GuardarRespuesta(model.LinkUnico, ipCliente, valores);
+        }
+
+        public ResultadosViewModel ObtenerResultados(int encuestaId, int usuarioId)
+        {
+            return _encuestaRepository.ObtenerResultados(encuestaId, usuarioId);
         }
     }
 }

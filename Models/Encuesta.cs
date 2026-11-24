@@ -16,6 +16,8 @@ namespace AcmeEncuestasWeb.Models
         public bool EsActiva { get; set; }
         public DateTime FechaCreacion { get; set; }
         public DateTime? FechaModificacion { get; set; }
+        public int TotalCampos { get; set; }
+        public int TotalRespuestas { get; set; }
 
         public List<CampoEncuesta> Campos { get; set; }
 

@@ -143,6 +143,10 @@
     <Compile Include="Data\EncuestaRepository.cs" />
     <Compile Include="Services\EncuestaService.cs" />
     <Compile Include="Controllers\EncuestaController.cs" />
+    <Compile Include="Controllers\PublicoController.cs" />
+    <Compile Include="ViewModels\CampoRespuestaViewModel.cs" />
+    <Compile Include="ViewModels\LlenarEncuestaViewModel.cs" />
+    <Compile Include="ViewModels\ResultadosViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\bootstrap.css" />
@@ -175,13 +179,15 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Account\Login.cshtml" />
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
-    <Content Include="ScriptsSQL\01_CreacionBaseDatosYUsuarios.sql" />
     <Content Include="Views\Error\NotFound.cshtml" />
     <Content Include="ScriptsSQL\AcmeEncuestasDB.sql" />
     <Content Include="Views\Encuesta\Index.cshtml" />
     <Content Include="Views\Encuesta\Crear.cshtml" />
     <Content Include="Views\Encuesta\Editar.cshtml" />
     <Content Include="Views\Encuesta\Eliminar.cshtml" />
+    <Content Include="Views\Encuesta\Resultados.cshtml" />
+    <Content Include="Views\Publico\Llenar.cshtml" />
+    <Content Include="Views\Publico\Gracias.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

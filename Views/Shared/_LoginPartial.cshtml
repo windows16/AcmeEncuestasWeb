@@ -7,7 +7,11 @@
             </span>
         </li>
         <li class="nav-item">
-            @Html.ActionLink("Cerrar Sesión", "Logout", "Account", routeValues: null, htmlAttributes: new { @class = "nav-link text-warning" })
+            @using (Html.BeginForm("Logout", "Account", FormMethod.Post, new { @class = "d-inline" }))
+            {
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-link nav-link text-warning">Cerrar Sesión</button>
+            }
         </li>
     </ul>
 }

@@ -82,7 +82,9 @@ namespace AcmeEncuestasWeb.Controllers
             }
         }
 
-        // POST o GET: /Account/Logout
+        // POST: /Account/Logout
+        [HttpPost]
+        [ValidateAntiForgeryToken]
         [Authorize]
         public ActionResult Logout()
         {

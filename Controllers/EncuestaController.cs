@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Web.Mvc;
 using AcmeEncuestasWeb.Data;
@@ -34,6 +35,19 @@ namespace AcmeEncuestasWeb.Controllers
             string baseUrl = ObtenerBaseUrl();
             var listado = _encuestaService.ListarPorUsuario(usuarioId, baseUrl);
             return View(listado);
+        }
+
+        [HttpGet]
+        public ActionResult Resultados(int id)
+        {
+            var resultados = _encuestaService.ObtenerResultados(id, ObtenerUsuarioIdActual());
+            if (resultados == null)
+            {
+                return HttpNotFound("La encuesta solicitada no existe o no tiene permisos para consultar sus resultados.");
+            }
+
+            resultados.UrlPublica = $"{ObtenerBaseUrl().TrimEnd('/')}/Publico/Llenar/{resultados.LinkUnico}";
+            return View(resultados);
         }
 
         [HttpGet]
@@ -127,7 +141,14 @@ namespace AcmeEncuestasWeb.Controllers
             catch (Exception ex)
             {
                 System.Diagnostics.Trace.TraceError("Error al actualizar encuesta: {0}", ex);
-                ModelState.AddModelError("", "Ocurrió un error al intentar actualizar la encuesta.");
+                if (ex is SqlException && ex.Message.Contains("No se puede cambiar la estructura de campos de una encuesta que ya tiene respuestas."))
+                {
+                    ModelState.AddModelError("", "Esta encuesta ya recibió respuestas. Para conservar el historial, solo puede modificar el nombre y la descripción.");
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Ocurrió un error al intentar actualizar la encuesta.");
+                }
                 model.UrlPublica = $"{ObtenerBaseUrl().TrimEnd('/')}/Publico/Llenar/{model.LinkUnico}";
                 return View(model);
             }
@@ -163,7 +184,7 @@ namespace AcmeEncuestasWeb.Controllers
                 }
                 else
                 {
-                    TempData["MensajeExito"] = "La encuesta y sus campos han sido eliminados correctamente.";
+                    TempData["MensajeExito"] = "La encuesta ha sido eliminada correctamente.";
                 }
 
                 return RedirectToAction("Index");
@@ -180,10 +201,23 @@ namespace AcmeEncuestasWeb.Controllers
 
         private void ValidarCamposDinamicos(EncuestaFormViewModel model)
         {
-            if (model.Campos == null || !model.Campos.Any(c => !string.IsNullOrWhiteSpace(c.NombreCampo) && !string.IsNullOrWhiteSpace(c.TituloCampo)))
+            if (model == null)
+            {
+                ModelState.AddModelError("", "Los datos de la encuesta no son válidos.");
+                return;
+            }
+
+            model.Campos = model.Campos == null ? new List<CampoEditorViewModel>() : model.Campos.Where(c => c != null).ToList();
+
+            if (!model.Campos.Any(c => !string.IsNullOrWhiteSpace(c.NombreCampo) && !string.IsNullOrWhiteSpace(c.TituloCampo)))
             {
                 ModelState.AddModelError("", "Debe configurar al menos un campo dinámico para la encuesta.");
                 return;
+            }
+
+            if (model.Campos.Any(c => c.TipoCampoId < 1 || c.TipoCampoId > 3))
+            {
+                ModelState.AddModelError("", "El tipo de cada campo debe ser Texto, Número o Fecha.");
             }
 
             var nombresDuplicados = model.Campos
