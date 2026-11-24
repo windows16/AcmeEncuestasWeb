@@ -69,9 +69,14 @@ namespace AcmeEncuestasWeb.Controllers
 
                 return RedirigirSegunReturnUrl(model.ReturnUrl);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // En entorno de desarrollo se puede registrar el log
+                // Registrar el detalle técnico sin exponerlo al usuario.
+                System.Diagnostics.Trace.TraceError(
+                    "Error al intentar iniciar sesión para el usuario '{0}'. {1}",
+                    model.Username,
+                    ex);
+
                 ModelState.AddModelError("", "Ocurrió un error al intentar iniciar sesión. Por favor, intente más tarde.");
                 return View(model);
             }

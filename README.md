@@ -10,15 +10,10 @@ cubre en su totalidad el **Requisito 1: "Login con usuario y password"**, respon
 
 ### 1. Base de Datos (SQL Server)
 * **Normalización (3FN):** La tabla `dbo.Usuarios` almacena información atómica sin redundancias ni dependencias transitivas.
-* **Tipos de datos optimizados:**
-  * `INT IDENTITY(1,1)` para clave primaria indexada.
-  * `NVARCHAR(50)` y `NVARCHAR(100)` con restricciones `UNIQUE` para evitar duplicidad de usuarios y correos.
-  * `VARCHAR(128)` para los campos criptográficos (almacenamiento en Base64).
-  * `DATETIME2(0)` para un menor consumo de almacenamiento en auditorías de fechas frente al tipo tradicional `DATETIME`.
-  * `BIT` con valor por defecto `1` para borrado lógico / estado activo.
 
-### 2. Seguridad de la Información y Criptografía
-* **Algoritmo de codificado (Punto 4.1):** Las contraseñas **nunca se guardan en texto plano**. Se implementó **PBKDF2 con HMAC-SHA256** (`Rfc2898DeriveBytes`) y **10,000 iteraciones**, siguiendo las directrices de NIST contra ataques de fuerza bruta y diccionarios.
+
+### 2. Seguridad 
+* **Algoritmo de codificado:** Las contraseñas **nunca se guardan en texto plano**. Se implementó **PBKDF2 con HMAC-SHA256** (`Rfc2898DeriveBytes`) y **10,000 iteraciones**, siguiendo las directrices de NIST contra ataques de fuerza bruta y diccionarios.
 * **Salting Criptográfico:** Cada usuario cuenta con un **Salt aleatorio de 256 bits** (`RNGCryptoServiceProvider`), neutralizando por completo el uso de Rainbow Tables.
 * **Prevención de Timing Attacks (Punto 4.2):** La verificación de contraseñas compara los arreglos de bytes en tiempo constante para evitar ataques de canal lateral (*side-channel timing attacks*).
 * **Seguridad Web:** Formulario protegido contra ataques de falsificación de petición en sitios cruzados con `[ValidateAntiForgeryToken]` y cookies de autenticación `FormsAuthentication` con banderas seguras.

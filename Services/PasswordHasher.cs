@@ -56,12 +56,18 @@ namespace AcmeEncuestasWeb.Services
             if (string.IsNullOrEmpty(passwordIngresada) || string.IsNullOrEmpty(saltBase64) || string.IsNullOrEmpty(hashAlmacenadoBase64))
                 return false;
 
-            string nuevoHash = HashearPassword(passwordIngresada, saltBase64);
+            try
+            {
+                string nuevoHash = HashearPassword(passwordIngresada, saltBase64);
+                byte[] a = Convert.FromBase64String(nuevoHash);
+                byte[] b = Convert.FromBase64String(hashAlmacenadoBase64);
 
-            byte[] a = Convert.FromBase64String(nuevoHash);
-            byte[] b = Convert.FromBase64String(hashAlmacenadoBase64);
-
-            return ComparacionTiempoConstante(a, b);
+                return ComparacionTiempoConstante(a, b);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
         }
 
         private static bool ComparacionTiempoConstante(byte[] a, byte[] b)

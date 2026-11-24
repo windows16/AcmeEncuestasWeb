@@ -45,9 +45,20 @@ BEGIN
         N'Administrador Acme',
         N'admin',
         N'admin@acme.com',
-        'cZ0z7vO6qV/7P13JqM3aGv8j7x4f6z6U1l5Y2x3b4v8=', -- Hash computado con Salt
-        'K8j2N5m1Q9p4V7x0Z3b6D9g2L5r8T1y4',             -- Salt aleatorio en Base64
+        'K3xGrd1kuO6iFgYK1QY20+gK7CzLJsfK5Hrbq0zW6x0=', -- Hash valido para Admin123* 
+        'usCwtIDqBXe4xT/68ZTKa8x2ojQBOpFfnUsxuPKKmN4=', -- Salt valido de 32 bytes
         1
     );
 END
+ELSE
+BEGIN
+    -- Actualiza las credenciales de prueba para que coincidan con el usuario mostrado en la pantalla.
+    UPDATE dbo.Usuarios
+    SET PasswordHash = 'K3xGrd1kuO6iFgYK1QY20+gK7CzLJsfK5Hrbq0zW6x0=',
+        PasswordSalt = 'usCwtIDqBXe4xT/68ZTKa8x2ojQBOpFfnUsxuPKKmN4=',
+        EsActivo = 1
+    WHERE Username = 'admin';
+END
 GO
+
+
