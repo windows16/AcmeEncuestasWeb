@@ -13,6 +13,7 @@ Aplicación web ASP.NET MVC 5 con C# y SQL Server para administrar encuestas din
 
 Si SQL Server no está iniciado o la cadena de conexión no apunta a la instancia correcta, la aplicación no podrá acceder a los datos.
 
+Al ejecutar el script también se crean dos encuestas para `admin`: **Demo: satisfacción del servicio**, con 55 respuestas de ejemplo y campos de texto, número y fecha; y **Demo: encuesta sin respuestas**, para probar la edición de campos y el estado vacío. Las 55 respuestas permiten probar la paginación. Inicie sesión y abra **Encuestas** para verlas y copiar sus enlaces públicos. Busque, por ejemplo, “Andrea” en los resultados de la encuesta de satisfacción. 
 ## Funcionalidades
 
 - Login con usuario y contraseña.

@@ -688,3 +688,155 @@ BEGIN
     ORDER BY r.FechaRespuesta DESC, r.RespuestaId DESC;
 END
 GO
+
+-- ==============================================================================
+-- Datos iniciales de demostración
+-- Se crean solo si no existen para poder ejecutar el script nuevamente sin duplicarlos.
+-- Los valores de respuesta simulados usan formato legado (0) y se cifran automáticamente
+-- al consultar la página de resultados desde la aplicación.
+-- ==============================================================================
+DECLARE @UsuarioDemoId INT;
+DECLARE @EncuestaDemoId INT;
+DECLARE @EncuestaVaciaId INT;
+DECLARE @RespuestasDemo TABLE (
+    Numero INT NOT NULL PRIMARY KEY,
+    IpCliente VARCHAR(45) NOT NULL,
+    FechaRespuesta DATETIME2(0) NOT NULL
+);
+
+SELECT @UsuarioDemoId = UsuarioId
+FROM dbo.Usuarios
+WHERE Username = N'admin';
+
+IF @UsuarioDemoId IS NOT NULL
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM dbo.Encuestas WHERE LinkUnico = 'a8d1c6e4-7f2b-4a90-9d35-1e6b8c2f7043')
+    BEGIN
+        INSERT INTO dbo.Encuestas (UsuarioId, Nombre, Descripcion, LinkUnico, EsActiva)
+        VALUES (
+            @UsuarioDemoId,
+            N'Demo: satisfacción del servicio',
+            N'Encuesta de ejemplo con respuestas para probar campos de texto, número, fecha, búsqueda y resultados.',
+            'a8d1c6e4-7f2b-4a90-9d35-1e6b8c2f7043',
+            1
+        );
+    END
+
+    SELECT @EncuestaDemoId = EncuestaId
+    FROM dbo.Encuestas
+    WHERE LinkUnico = 'a8d1c6e4-7f2b-4a90-9d35-1e6b8c2f7043'
+      AND UsuarioId = @UsuarioDemoId;
+
+    IF @EncuestaDemoId IS NOT NULL
+    BEGIN
+        INSERT INTO dbo.CamposEncuesta (EncuestaId, NombreCampo, TituloCampo, EsRequerido, TipoCampoId, Orden)
+        SELECT @EncuestaDemoId, datos.NombreCampo, datos.TituloCampo, datos.EsRequerido, datos.TipoCampoId, datos.Orden
+        FROM (VALUES
+            (N'Nombre', N'Nombre', CAST(1 AS BIT), CAST(1 AS TINYINT), 1),
+            (N'Servicio', N'Servicio utilizado', CAST(1 AS BIT), CAST(1 AS TINYINT), 2),
+            (N'Calificacion', N'Calificación (1 a 10)', CAST(1 AS BIT), CAST(2 AS TINYINT), 3),
+            (N'FechaVisita', N'Fecha de visita', CAST(1 AS BIT), CAST(3 AS TINYINT), 4),
+            (N'Comentario', N'Comentario adicional', CAST(0 AS BIT), CAST(1 AS TINYINT), 5)
+        ) AS datos(NombreCampo, TituloCampo, EsRequerido, TipoCampoId, Orden)
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM dbo.CamposEncuesta c
+            WHERE c.EncuestaId = @EncuestaDemoId
+              AND c.NombreCampo = datos.NombreCampo
+        );
+    END
+
+    IF NOT EXISTS (SELECT 1 FROM dbo.Encuestas WHERE LinkUnico = 'b7e2d5f3-6a1c-4b89-8c24-2d5a7f1e6034')
+    BEGIN
+        INSERT INTO dbo.Encuestas (UsuarioId, Nombre, Descripcion, LinkUnico, EsActiva)
+        VALUES (
+            @UsuarioDemoId,
+            N'Demo: encuesta sin respuestas',
+            N'Formulario de prueba sin respuestas; permite probar cambios en los campos antes del primer envío.',
+            'b7e2d5f3-6a1c-4b89-8c24-2d5a7f1e6034',
+            1
+        );
+    END
+
+    SELECT @EncuestaVaciaId = EncuestaId
+    FROM dbo.Encuestas
+    WHERE LinkUnico = 'b7e2d5f3-6a1c-4b89-8c24-2d5a7f1e6034'
+      AND UsuarioId = @UsuarioDemoId;
+
+    IF @EncuestaVaciaId IS NOT NULL
+    BEGIN
+        INSERT INTO dbo.CamposEncuesta (EncuestaId, NombreCampo, TituloCampo, EsRequerido, TipoCampoId, Orden)
+        SELECT @EncuestaVaciaId, datos.NombreCampo, datos.TituloCampo, datos.EsRequerido, datos.TipoCampoId, datos.Orden
+        FROM (VALUES
+            (N'NombreCompleto', N'Nombre completo', CAST(1 AS BIT), CAST(1 AS TINYINT), 1),
+            (N'Edad', N'Edad', CAST(0 AS BIT), CAST(2 AS TINYINT), 2),
+            (N'FechaNacimiento', N'Fecha de nacimiento', CAST(0 AS BIT), CAST(3 AS TINYINT), 3)
+        ) AS datos(NombreCampo, TituloCampo, EsRequerido, TipoCampoId, Orden)
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM dbo.CamposEncuesta c
+            WHERE c.EncuestaId = @EncuestaVaciaId
+              AND c.NombreCampo = datos.NombreCampo
+        );
+    END
+
+    IF @EncuestaDemoId IS NOT NULL
+    BEGIN
+        ;WITH Numeros AS
+        (
+            SELECT TOP (55)
+                CONVERT(INT, ROW_NUMBER() OVER (ORDER BY (SELECT NULL))) AS Numero
+            FROM sys.all_objects a
+            CROSS JOIN sys.all_objects b
+        )
+        INSERT INTO @RespuestasDemo (Numero, IpCliente, FechaRespuesta)
+        SELECT
+            Numero,
+            '198.51.100.' + CONVERT(VARCHAR(3), Numero),
+            DATEADD(DAY, -Numero, CAST('2026-03-01T10:00:00' AS DATETIME2(0)))
+        FROM Numeros;
+
+        INSERT INTO dbo.RespuestasEncuesta (EncuestaId, FechaRespuesta, IpCliente)
+        SELECT @EncuestaDemoId, datos.FechaRespuesta, datos.IpCliente
+        FROM @RespuestasDemo datos
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM dbo.RespuestasEncuesta r
+            WHERE r.EncuestaId = @EncuestaDemoId
+              AND r.IpCliente = datos.IpCliente
+        );
+
+        INSERT INTO dbo.ValoresCampo (RespuestaId, CampoId, Valor, FormatoCifrado)
+        SELECT r.RespuestaId, c.CampoId, datos.Valor, 0
+        FROM @RespuestasDemo demo
+        CROSS APPLY
+        (
+            VALUES
+                (N'Nombre', CASE demo.Numero
+                    WHEN 1 THEN N'Andrea López'
+                    WHEN 2 THEN N'Carlos Méndez'
+                    WHEN 3 THEN N'María García'
+                    ELSE N'Cliente de prueba ' + RIGHT(N'000' + CONVERT(NVARCHAR(3), demo.Numero), 3)
+                END),
+                (N'Servicio', CASE WHEN demo.Numero % 2 = 0 THEN N'Asesoría técnica' ELSE N'Atención al cliente' END),
+                (N'Calificacion', CONVERT(NVARCHAR(10), 5 + (demo.Numero * 7) % 6)),
+                (N'FechaVisita', CONVERT(NVARCHAR(10), demo.FechaRespuesta, 23)),
+                (N'Comentario', CASE demo.Numero
+                    WHEN 1 THEN N'Resolvieron mi consulta rápidamente.'
+                    WHEN 2 THEN N'Buena atención, aunque hubo que esperar.'
+                    WHEN 3 THEN N'Excelente servicio.'
+                    ELSE N'Comentario de prueba ' + RIGHT(N'000' + CONVERT(NVARCHAR(3), demo.Numero), 3)
+                END)
+        ) AS datos(NombreCampo, Valor)
+        INNER JOIN dbo.RespuestasEncuesta r
+            ON r.EncuestaId = @EncuestaDemoId AND r.IpCliente = demo.IpCliente
+        INNER JOIN dbo.CamposEncuesta c
+            ON c.EncuestaId = @EncuestaDemoId AND c.NombreCampo = datos.NombreCampo
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM dbo.ValoresCampo vc
+            WHERE vc.RespuestaId = r.RespuestaId AND vc.CampoId = c.CampoId
+        );
+    END
+END
+GO
