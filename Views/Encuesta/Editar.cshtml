@@ -20,7 +20,7 @@
         @Html.HiddenFor(m => m.EncuestaId)
         @Html.HiddenFor(m => m.LinkUnico)
 
-        @Html.ValidationSummary(true, "", new { @class = "alert alert-danger py-2 small mb-4" })
+        @Html.Partial("_DismissibleValidationSummary")
 
         <!-- Tarjeta: Enlace de Llenado Generado -->
         <div class="card border-0 shadow-sm mb-4 bg-light">

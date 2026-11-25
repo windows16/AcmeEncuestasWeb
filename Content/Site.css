@@ -18,3 +18,11 @@ select,
 textarea {
     max-width: 100%;
 }
+
+.alert-dismissible.alert-compact .btn-close {
+    position: static;
+    flex: 0 0 auto;
+    margin-left: 1rem;
+    padding: 0.25rem;
+    transform: none;
+}

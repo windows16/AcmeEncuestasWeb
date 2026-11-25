@@ -24,9 +24,7 @@ namespace AcmeEncuestasWeb.Data
             _connectionString = connectionString;
         }
 
-        /// <summary>
-        /// Obtiene todas las encuestas activas de un usuario mediante el Stored Procedure dbo.sp_ObtenerEncuestasPorUsuario.
-        /// </summary>
+       
         public List<Encuesta> ObtenerPorUsuario(int usuarioId)
         {
             var lista = new List<Encuesta>();
@@ -64,10 +62,7 @@ namespace AcmeEncuestasWeb.Data
             return lista;
         }
 
-        /// <summary>
-        /// Obtiene el detalle completo de una encuesta y sus campos dinámicos en un solo viaje a la BD
-        /// mediante el Stored Procedure dbo.sp_ObtenerEncuestaPorId (múltiples result sets con reader.NextResult()).
-        /// </summary>
+    
         public Encuesta ObtenerPorId(int encuestaId, int usuarioId)
         {
             Encuesta encuesta = null;
@@ -83,7 +78,7 @@ namespace AcmeEncuestasWeb.Data
 
                 using (var reader = cmd.ExecuteReader())
                 {
-                    // Result Set 1: Cabecera
+                    // Encabezado
                     if (reader.Read())
                     {
                         encuesta = new Encuesta
@@ -99,7 +94,7 @@ namespace AcmeEncuestasWeb.Data
                         };
                     }
 
-                    // Result Set 2: Campos dinámicos
+                    //Campos dinámicos
                     if (encuesta != null && reader.NextResult())
                     {
                         while (reader.Read())
@@ -123,21 +118,16 @@ namespace AcmeEncuestasWeb.Data
             return encuesta;
         }
 
-        /// <summary>
-        /// Crea una nueva encuesta y sus campos dinámicos utilizando el Stored Procedure unificado dbo.sp_GuardarEncuesta.
-        /// Retorna el EncuestaId generado.
-        /// </summary>
+        
         public int Crear(Encuesta encuesta)
         {
             if (encuesta == null) throw new ArgumentNullException(nameof(encuesta));
 
-            encuesta.EncuestaId = 0; // 0 indica creación (INSERT)
+            encuesta.EncuestaId = 0; 
             return EjecutarSpGuardarEncuesta(encuesta);
         }
 
-        /// <summary>
-        /// Actualiza una encuesta existente y su listado de campos dinámicos utilizando el Stored Procedure unificado dbo.sp_GuardarEncuesta.
-        /// </summary>
+        
         public bool Actualizar(Encuesta encuesta)
         {
             if (encuesta == null) throw new ArgumentNullException(nameof(encuesta));
@@ -234,7 +224,7 @@ namespace AcmeEncuestasWeb.Data
         }
 
         /// <summary>
-        /// Obtiene una encuesta activa y sus campos dinámicos mediante su Link Único (para llenado público).
+        /// Obtiene una encuesta activa y sus campos dinámicos mediante su Link.
         /// </summary>
         public Encuesta ObtenerPorLink(string linkUnico)
         {
@@ -252,7 +242,7 @@ namespace AcmeEncuestasWeb.Data
 
                 using (var reader = cmd.ExecuteReader())
                 {
-                    // Result Set 1: Cabecera
+                    // Encabezado
                     if (reader.Read())
                     {
                         encuesta = new Encuesta
@@ -267,7 +257,7 @@ namespace AcmeEncuestasWeb.Data
                         };
                     }
 
-                    // Result Set 2: Campos Dinámicos
+                    // Campos Dinámicos
                     if (encuesta != null && reader.NextResult())
                     {
                         while (reader.Read())
@@ -291,10 +281,7 @@ namespace AcmeEncuestasWeb.Data
             return encuesta;
         }
 
-        /// <summary>
-        /// Guarda una nueva respuesta enviada por un participante junto con los valores capturados (Requisito 3).
-        /// Utiliza el Stored Procedure dbo.sp_GuardarRespuestaEncuesta con Table-Valued Parameter.
-        /// </summary>
+       
         public int GuardarRespuesta(string linkUnico, string ipCliente, List<ValorCampo> valores)
         {
             if (string.IsNullOrWhiteSpace(linkUnico)) throw new ArgumentNullException(nameof(linkUnico));
@@ -331,10 +318,7 @@ namespace AcmeEncuestasWeb.Data
             }
         }
 
-        /// <summary>
-        /// Obtiene los resultados completos y tabulados de una encuesta para su dueño (Requisito 4).
-        /// Utiliza el Stored Procedure dbo.sp_ObtenerResultadosEncuesta con múltiples Result Sets.
-        /// </summary>
+        
         public ResultadosViewModel ObtenerResultados(int encuestaId, int usuarioId)
         {
             var modelo = new ResultadosViewModel();
@@ -350,7 +334,7 @@ namespace AcmeEncuestasWeb.Data
 
                 using (var reader = cmd.ExecuteReader())
                 {
-                    // Result Set 1: Resumen de Encuesta
+                    // Resumen de Encuesta
                     if (reader.Read())
                     {
                         modelo.EncuestaId = reader.GetInt32(0);
@@ -364,7 +348,7 @@ namespace AcmeEncuestasWeb.Data
                         return null; // Encuesta no encontrada o no pertenece al usuario
                     }
 
-                    // Result Set 2: Columnas de Campos configurados
+                    // Columnas de Campos configurados
                     if (reader.NextResult())
                     {
                         while (reader.Read())
@@ -380,7 +364,7 @@ namespace AcmeEncuestasWeb.Data
                         }
                     }
 
-                    // Result Set 3: Respuestas individuales y sus valores
+                    // Respuestas individuales y sus valores
                     if (reader.NextResult())
                     {
                         var mapaFilas = new Dictionary<int, FilaResultadoViewModel>();

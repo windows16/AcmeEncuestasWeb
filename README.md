@@ -1,75 +1,34 @@
-# Sistema de Encuestas Acme
+# Plataforma de Encuestas Acme
 
-Plataforma web desarrollada en **ASP.NET MVC 5** con **C#** y **Microsoft SQL Server** para la gestión y llenado de encuestas en línea.
+Aplicación web ASP.NET MVC 5 con C# y SQL Server para administrar encuestas dinámicas, compartir un enlace público y consultar respuestas.
 
----
+## Funcionalidades
 
-## Requisito Implementado: Autenticación (Login)
+- Login con usuario y contraseña.
+- Creación, modificación y eliminación lógica de encuestas y sus campos.
+- Campos dinámicos de texto, número y fecha, con indicador obligatorio.
+- Enlace público único por encuesta; responder no requiere iniciar sesión.
+- Validación de campos y tipos tanto en la aplicación como en el procedimiento almacenado.
+- Consulta privada de respuestas, ordenadas por fecha, con sus valores por campo.
+- Protección de los formularios POST con token antifalsificación y consultas SQL parametrizadas.
 
-cubre en su totalidad el **Requisito 1: "Login con usuario y password"**, respondiendo directamente a los criterios de evaluación:
+## Diseño
 
-### 1. Base de Datos (SQL Server)
-* **Normalización (3FN):** La tabla `dbo.Usuarios` almacena información atómica sin redundancias ni dependencias transitivas.
+Las entidades se separan en `Usuarios`, `Encuestas`, `CamposEncuesta`, `RespuestasEncuesta` y `ValoresCampo`, con claves foráneas e índices para mantener integridad y facilitar las consultas por usuario, encuesta y respuesta. `TiposCampo` es un catálogo para los tres tipos permitidos.
 
+La aplicación separa Controllers, Services con la logica de negocio y repositorios ADO.NET en Data. 
 
-### 2. Seguridad 
-* **Algoritmo de codificado:** Las contraseñas **nunca se guardan en texto plano**. Se implementó **PBKDF2 con HMAC-SHA256** (`Rfc2898DeriveBytes`) y **10,000 iteraciones**, siguiendo las directrices de NIST contra ataques de fuerza bruta y diccionarios.
-* **Salting Criptográfico:** Cada usuario cuenta con un **Salt aleatorio de 256 bits** (`RNGCryptoServiceProvider`), neutralizando por completo el uso de Rainbow Tables.
-* **Prevención de Timing Attacks (Punto 4.2):** La verificación de contraseñas compara los arreglos de bytes en tiempo constante para evitar ataques de canal lateral (*side-channel timing attacks*).
-* **Seguridad Web:** Formulario protegido contra ataques de falsificación de petición en sitios cruzados con `[ValidateAntiForgeryToken]` y cookies de autenticación `FormsAuthentication` con banderas seguras.
+Para conservar la relación entre resultados históricos y su definición, el procedimiento no permite cambiar los campos de una encuesta que ya tiene respuestas; sí permite actualizar su nombre y descripción. Las encuestas sin respuestas pueden modificar libremente sus campos.
 
-### 3. Arquitectura de la Solución
-```
-AcmeEncuestasWeb/
-├── Controllers/
-│   └── AccountController.cs          # Controlador MVC: Login, Logout, validación de estado
-├── Data/
-│   └── UsuarioRepository.cs          # Capa de Acceso a Datos optimizada con ADO.NET parametrizado
-├── Models/
-│   └── Usuario.cs                    # Entidad de dominio de la tabla Usuarios
-├── ViewModels/
-│   └── LoginViewModel.cs             # Modelo de vista con DataAnnotations para validación
-├── Services/
-│   ├── PasswordHasher.cs             # Motor de cifrado seguro PBKDF2 + SHA-256 + Salt
-│   └── AuthService.cs                # Orquestador de autenticación y lógica de negocio
-├── Views/
-│   ├── Account/
-│   │   └── Login.cshtml              # Vista Razor con interfaz Bootstrap y feedback visual
-│   └── Shared/
-│       └── _LoginPartial.cshtml      # Componente de navegación para usuario autenticado
-├── ScriptsSQL/
-│   └── 01_CreacionBaseDatosYUsuarios.sql  # Script DDL + usuario de prueba
-└── Web.config                        # Cadena de conexión y configuración FormsAuthentication
-```
+## Seguridad de credenciales
 
----
+Las contraseñas no se almacenan en texto plano ni se cifran de forma reversible. `PasswordHasher` usa PBKDF2-HMAC-SHA256 con salt aleatorio por usuario y compara hashes en tiempo constante. Esto protege las credenciales. los valores de respuesta se guardan como datos de encuesta en SQL Server y no cuentan con cifrado de campo.
 
-## Pasos para Probar el Login en Local
+## Configuración y ejecución
 
-### Paso 1: Ejecutar el Script de Base de Datos
-1. Abre **SQL Server Management Studio (SSMS)** y conéctate a tu instancia local (`.` o `localhost`).
-2. Abre y ejecuta el archivo:
-   `AcmeEncuestasWeb\ScriptsSQL\AcmeEncuestasDB.sql`
-3. Esto creará la base de datos `AcmeEncuestasDB`, la tabla `Usuarios` y el usuario administrador de prueba.
+1. Abra `ScriptsSQL\AcmeEncuestasDB.sql` en SQL Server Management Studio y ejecute el script en una instancia compatible con SQL Server 2016 SP1 o posterior.
+2. Revise la cadena `AcmeEncuestasConnection` en `Web.config`. El valor inicial apunta a `.\` con autenticación integrada; ajuste `Data Source` según su instancia.
+3. Abra `AcmeEncuestasWeb.sln` en Visual Studio 2022 o posterior, restaure los paquetes NuGet y ejecute con IIS Express.
+4. Inicie sesión en `/Account/Login`.
 
-### Paso 2: Configurar la Cadena de Conexión 
-En el archivo `Web.config`, la cadena ya apunta a tu SQL Server local por defecto con autenticación de Windows:
-```xml
-<connectionStrings>
-  <add name="AcmeEncuestasConnection" 
-       connectionString="Data Source=.;Initial Catalog=AcmeEncuestasDB;Integrated Security=True;MultipleActiveResultSets=True;" 
-       providerName="System.Data.SqlClient" />
-</connectionStrings>
-```
-*(Si utiliza autenticación de SQL Server con usuario `sa`, solo ajusta el `User Id` y `Password`).*
-
-*"Si su instancia local de SQL Server utiliza un nombre específico (ej. .\SQLEXPRESS), únicamente modifique el atributo Data Source=.\SQLEXPRESS en el Web.config."*
-
-### Paso 3: Iniciar la Aplicación
-1. Abre la solución `AcmeEncuestasWeb.sln` en **Visual Studio**.
-2. Presiona **F5** (o botón *IIS Express* en verde).
-3. Navega a `/Account/Login` o haz clic en **"Iniciar Sesión"** en la barra superior.
-
-### Credenciales de Prueba:
-* **Usuario:** `admin`
-* **Contraseña:** `Admin123*`
+El script crea un usuario de demostración: `admin` / `Admin123*`. 

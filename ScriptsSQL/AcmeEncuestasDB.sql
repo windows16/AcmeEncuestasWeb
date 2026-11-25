@@ -419,7 +419,7 @@ GO
 
 -- ==============================================================================
 -- dbo.sp_ObtenerEncuestaPorLink
--- Consulta una encuesta y sus campos dinámicos para llenado público
+-- Consulta una encuesta y sus campos dinámicos para llenado publico
 -- ==============================================================================
 CREATE OR ALTER PROCEDURE dbo.sp_ObtenerEncuestaPorLink
     @LinkUnico VARCHAR(36)
@@ -427,7 +427,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Cabecera
+    -- Encabezado
     SELECT 
         EncuestaId, 
         UsuarioId, 
@@ -439,7 +439,7 @@ BEGIN
     FROM dbo.Encuestas WITH (NOLOCK)
     WHERE LinkUnico = @LinkUnico AND EsActiva = 1;
 
-    -- Campos dinámicos requeridos para llenar
+    -- Campos dinamicos
     SELECT 
         c.CampoId, 
         c.EncuestaId, 
@@ -575,7 +575,7 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    -- Result Set 1: Resumen de la Encuesta
+    -- Resumen de la Encuesta
     SELECT 
         e.EncuestaId,
         e.Nombre,
@@ -586,7 +586,7 @@ BEGIN
     FROM dbo.Encuestas e WITH (NOLOCK)
     WHERE e.EncuestaId = @EncuestaId AND e.UsuarioId = @UsuarioId;
 
-    -- Result Set 2: Columnas de Campos configurados
+    -- Columnas de Campos configurados
     SELECT 
         c.CampoId,
         c.NombreCampo,
@@ -602,7 +602,7 @@ BEGIN
       )
     ORDER BY c.Orden ASC, c.CampoId ASC;
 
-    -- Result Set 3: Respuestas individuales y sus valores registrados
+    -- Respuestas individuales y sus valores registrados
     SELECT 
         r.RespuestaId,
         r.FechaRespuesta,
