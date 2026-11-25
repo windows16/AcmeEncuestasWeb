@@ -13,7 +13,9 @@ namespace AcmeEncuestasWeb.ViewModels
         public string Descripcion { get; set; }
         public string LinkUnico { get; set; }
         public string UrlPublica { get; set; }
+        public string TerminoBusqueda { get; set; }
         public int TotalRespuestas { get; set; }
+        public const int TamanoPagina = 50;
         public int PaginaActual { get; set; }
         public int TotalPaginas { get; set; }
         public List<ColumnaResultadoViewModel> Columnas { get; set; }

@@ -50,9 +50,15 @@
     }
     else
     {
+        <div class="mb-3">
+            <label for="buscarEncuesta" class="form-label fw-semibold">Buscar encuestas</label>
+            <input type="search" id="buscarEncuesta" class="form-control"
+                   placeholder="Buscar por nombre o descripción..." aria-controls="tablaEncuestas" />
+            <div id="estadoBusquedaEncuestas" class="form-text" aria-live="polite"></div>
+        </div>
         <div class="card border-0 shadow-sm">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table id="tablaEncuestas" class="table table-hover align-middle mb-0">
                     <thead class="table-light">
                         <tr>
                             <th style="width: 28%;">Nombre y Descripción</th>
@@ -65,7 +71,7 @@
                     <tbody>
                         @foreach (var item in Model)
                         {
-                            <tr>
+                            <tr data-search="@item.Nombre @item.Descripcion">
                                 <td>
                                     <div class="fw-bold text-dark">@item.Nombre</div>
                                     <div class="text-muted small text-truncate" style="max-width: 300px;">
@@ -106,6 +112,11 @@
                                 </td>
                             </tr>
                         }
+                        <tr id="sinCoincidenciasEncuestas" class="d-none">
+                            <td colspan="5" class="text-center text-muted py-4">
+                                No se encontraron encuestas que coincidan con la búsqueda.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -115,6 +126,33 @@
 
 @section Scripts {
     <script>
+        (function () {
+            var input = document.getElementById("buscarEncuesta");
+            if (!input) return;
+
+            var filas = Array.prototype.slice.call(
+                document.querySelectorAll("#tablaEncuestas tbody tr[data-search]"));
+            var sinCoincidencias = document.getElementById("sinCoincidenciasEncuestas");
+            var estado = document.getElementById("estadoBusquedaEncuestas");
+
+            input.addEventListener("input", function () {
+                var termino = input.value.trim().toLocaleLowerCase();
+                var visibles = 0;
+
+                filas.forEach(function (fila) {
+                    var texto = (fila.getAttribute("data-search") || "").toLocaleLowerCase();
+                    var coincide = texto.indexOf(termino) !== -1;
+                    fila.classList.toggle("d-none", !coincide);
+                    if (coincide) visibles++;
+                });
+
+                sinCoincidencias.classList.toggle("d-none", visibles !== 0);
+                estado.textContent = termino
+                    ? visibles + (visibles === 1 ? " encuesta encontrada" : " encuestas encontradas")
+                    : "";
+            });
+        })();
+
         function copiarEnlace(inputId, btn) {
             var input = document.getElementById(inputId);
             if (!input) return;

@@ -333,7 +333,7 @@ namespace AcmeEncuestasWeb.Data
                 cmd.Parameters.Add(new SqlParameter("@EncuestaId", SqlDbType.Int) { Value = encuestaId });
                 cmd.Parameters.Add(new SqlParameter("@UsuarioId", SqlDbType.Int) { Value = usuarioId });
                 cmd.Parameters.Add(new SqlParameter("@Pagina", SqlDbType.Int) { Value = Math.Max(1, pagina) });
-                cmd.Parameters.Add(new SqlParameter("@TamanoPagina", SqlDbType.Int) { Value = 50 });
+                cmd.Parameters.Add(new SqlParameter("@TamanoPagina", SqlDbType.Int) { Value = ResultadosViewModel.TamanoPagina });
 
                 conn.Open();
 

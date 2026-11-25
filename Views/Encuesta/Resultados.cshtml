@@ -15,7 +15,16 @@
             }
         </div>
         <div class="text-md-end">
-            <div class="fw-semibold">@Model.TotalRespuestas respuestas</div>
+            <div class="fw-semibold">
+                @if (string.IsNullOrEmpty(Model.TerminoBusqueda))
+                {
+                    <text>@Model.TotalRespuestas respuestas</text>
+                }
+                else
+                {
+                    <text>@Model.TotalRespuestas resultados para "@Model.TerminoBusqueda"</text>
+                }
+            </div>
             @if (Model.TotalRespuestas > 0)
             {
                 <div class="small text-muted">Página @Model.PaginaActual de @Model.TotalPaginas</div>
@@ -24,9 +33,25 @@
         </div>
     </div>
 
+    <form method="get" action="@Url.Action("Resultados", "Encuesta", new { id = Model.EncuestaId })" class="mb-4">
+        <div class="input-group">
+            <input type="search" name="busqueda" value="@Model.TerminoBusqueda" class="form-control"
+                   placeholder="Buscar en todas las respuestas..." aria-label="Buscar en todas las respuestas" />
+            <button type="submit" class="btn btn-primary">Buscar</button>
+            @if (!string.IsNullOrEmpty(Model.TerminoBusqueda))
+            {
+                <a class="btn btn-outline-secondary" href="@Url.Action("Resultados", "Encuesta", new { id = Model.EncuestaId })">Limpiar</a>
+            }
+        </div>
+    </form>
+
     @if (Model.Filas.Count == 0)
     {
-        <div class="alert alert-info">Esta encuesta aún no tiene respuestas.</div>
+        <div class="alert alert-info">
+            @(string.IsNullOrEmpty(Model.TerminoBusqueda)
+                ? "Esta encuesta aún no tiene respuestas."
+                : "No se encontraron respuestas que coincidan con la búsqueda.")
+        </div>
     }
     else
     {
@@ -68,7 +93,7 @@
                         }
                         else
                         {
-                            <a class="page-link" href="@Url.Action("Resultados", "Encuesta", new { id = Model.EncuestaId, pagina = Model.PaginaActual - 1 })">Anterior</a>
+                            <a class="page-link" href="@Url.Action("Resultados", "Encuesta", new { id = Model.EncuestaId, pagina = Model.PaginaActual - 1, busqueda = Model.TerminoBusqueda })">Anterior</a>
                         }
                     </li>
                     <li class="page-item @(Model.PaginaActual >= Model.TotalPaginas ? "disabled" : "")">
@@ -78,7 +103,7 @@
                         }
                         else
                         {
-                            <a class="page-link" href="@Url.Action("Resultados", "Encuesta", new { id = Model.EncuestaId, pagina = Model.PaginaActual + 1 })">Siguiente</a>
+                            <a class="page-link" href="@Url.Action("Resultados", "Encuesta", new { id = Model.EncuestaId, pagina = Model.PaginaActual + 1, busqueda = Model.TerminoBusqueda })">Siguiente</a>
                         }
                     </li>
                 </ul>

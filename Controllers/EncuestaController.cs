@@ -38,9 +38,9 @@ namespace AcmeEncuestasWeb.Controllers
         }
 
         [HttpGet]
-        public ActionResult Resultados(int id, int pagina = 1)
+        public ActionResult Resultados(int id, int pagina = 1, string busqueda = null)
         {
-            var resultados = _encuestaService.ObtenerResultados(id, ObtenerUsuarioIdActual(), pagina);
+            var resultados = _encuestaService.ObtenerResultados(id, ObtenerUsuarioIdActual(), pagina, busqueda);
             if (resultados == null)
             {
                 return HttpNotFound("La encuesta solicitada no existe o no tiene permisos para consultar sus resultados.");

@@ -10,6 +10,7 @@ Aplicación web ASP.NET MVC 5 con C# y SQL Server para administrar encuestas din
 - Enlace público único por encuesta; responder no requiere iniciar sesión.
 - Validación de campos obligatorios e integridad referencial en SQL Server, y validación de tipos en la aplicación antes de cifrar.
 - Consulta privada y paginada de respuestas, ordenadas por fecha, con sus valores por campo.
+- Búsqueda parcial, sin distinguir mayúsculas, sobre las respuestas de todas las páginas; la paginación conserva el filtro.
 - Protección de los formularios POST con token antifalsificación y consultas SQL parametrizadas.
 
 ## Diseño
@@ -29,6 +30,8 @@ Los valores históricos en texto plano se cifran gradualmente cuando se consulta
 ## Consultas y consistencia
 
 Los procedimientos usan parámetros tipados/TVP y `OFFSET/FETCH` para cargar solo la página solicitada. Se evita `NOLOCK`, que podría devolver lecturas no confirmadas o inconsistentes. El índice de respuestas por encuesta, fecha e identificador soporta la paginación.
+
+Como las respuestas están cifradas en la base de datos, la búsqueda se realiza en la aplicación después de descifrar cada lote paginado. Por ello, cada búsqueda revisa todas las respuestas de la encuesta, aunque limita las filas mantenidas en memoria a los lotes y a la página solicitada.
 
 ## Configuración y ejecución
 

@@ -158,9 +158,79 @@ namespace AcmeEncuestasWeb.Services
             return _encuestaRepository.GuardarRespuesta(model.LinkUnico, ipCliente, valores);
         }
 
-        public ResultadosViewModel ObtenerResultados(int encuestaId, int usuarioId, int pagina)
+        public ResultadosViewModel ObtenerResultados(int encuestaId, int usuarioId, int pagina, string terminoBusqueda = null)
         {
-            return _encuestaRepository.ObtenerResultados(encuestaId, usuarioId, pagina);
+            terminoBusqueda = terminoBusqueda?.Trim();
+            if (string.IsNullOrEmpty(terminoBusqueda))
+            {
+                var resultados = _encuestaRepository.ObtenerResultados(encuestaId, usuarioId, pagina);
+                if (resultados != null)
+                {
+                    resultados.TerminoBusqueda = string.Empty;
+                }
+
+                return resultados;
+            }
+
+            var primeraPagina = _encuestaRepository.ObtenerResultados(encuestaId, usuarioId, 1);
+            if (primeraPagina == null)
+            {
+                return null;
+            }
+
+            int paginaSolicitada = Math.Max(1, pagina);
+            long inicioPaginaSolicitada = (long)(paginaSolicitada - 1) * ResultadosViewModel.TamanoPagina;
+            int totalCoincidencias = 0;
+            var filasPaginaSolicitada = new List<FilaResultadoViewModel>();
+            var filasUltimaPagina = new Queue<FilaResultadoViewModel>();
+
+            for (int numeroPagina = 1; numeroPagina <= primeraPagina.TotalPaginas; numeroPagina++)
+            {
+                var paginaResultados = numeroPagina == 1
+                    ? primeraPagina
+                    : _encuestaRepository.ObtenerResultados(encuestaId, usuarioId, numeroPagina);
+
+                if (paginaResultados == null)
+                {
+                    return null;
+                }
+
+                foreach (var fila in paginaResultados.Filas)
+                {
+                    if (!fila.ValoresPorCampo.Values.Any(valor =>
+                        valor.IndexOf(terminoBusqueda, StringComparison.OrdinalIgnoreCase) >= 0))
+                    {
+                        continue;
+                    }
+
+                    if (totalCoincidencias >= inicioPaginaSolicitada
+                        && totalCoincidencias < inicioPaginaSolicitada + ResultadosViewModel.TamanoPagina)
+                    {
+                        filasPaginaSolicitada.Add(fila);
+                    }
+
+                    filasUltimaPagina.Enqueue(fila);
+                    if (filasUltimaPagina.Count > ResultadosViewModel.TamanoPagina)
+                    {
+                        filasUltimaPagina.Dequeue();
+                    }
+
+                    totalCoincidencias++;
+                }
+            }
+
+            int totalPaginas = Math.Max(1, (int)Math.Ceiling(totalCoincidencias / (double)ResultadosViewModel.TamanoPagina));
+            int paginaActual = Math.Min(paginaSolicitada, totalPaginas);
+
+            primeraPagina.TerminoBusqueda = terminoBusqueda;
+            primeraPagina.TotalRespuestas = totalCoincidencias;
+            primeraPagina.TotalPaginas = totalPaginas;
+            primeraPagina.PaginaActual = paginaActual;
+            primeraPagina.Filas = paginaActual == paginaSolicitada
+                ? filasPaginaSolicitada
+                : filasUltimaPagina.ToList();
+
+            return primeraPagina;
         }
     }
 }
