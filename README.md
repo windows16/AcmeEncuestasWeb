@@ -6,11 +6,22 @@ Aplicación web ASP.NET MVC 5 con C# y SQL Server para administrar encuestas din
 
 1. En SQL Server Management Studio, ejecute `ScriptsSQL\AcmeEncuestasDB.sql` en una instancia compatible con SQL Server 2016 SP1 o posterior.
 2. Verifique que `AcmeEncuestasConnection` en `Web.config` apunte a esa instancia y base de datos. El valor inicial de Data Source usa `.\SQLEXPRESS02` y autenticación integrada; ajustelo si su instancia tiene un nombre diferente.
+```xml
+<connectionStrings>
+  <add name="AcmeEncuestasConnection" 
+       connectionString="Data Source=.\[nombre de la instancia];Initial Catalog=AcmeEncuestasDB;Integrated Security=True;MultipleActiveResultSets=True;" 
+       providerName="System.Data.SqlClient" />
+</connectionStrings>
+```
+*(la autenticacion es por Windows).*
+
+
 3. Abra `AcmeEncuestasWeb.sln` con Visual Studio 2022 o posterior y restaure los paquetes NuGet (el visual lo hace automatico).
 5. Ejecute el proyecto con IIS Express y, cuando se abra el navegador, se mostrara la pantalla del login `/Account/Login`.
 6. Para la cuenta de demostración creada por el script, use las siguientes credenciales:
-
-    Usuario: `admin` Contraseña: `Admin123*`.
+    #### Credenciales de Prueba:
+    * **Usuario:** `admin`
+    * **Contraseña:** `Admin123*`
 
 
 ### Compilación de C# en IIS Express
