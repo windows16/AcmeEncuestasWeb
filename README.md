@@ -2,6 +2,17 @@
 
 Aplicación web ASP.NET MVC 5 con C# y SQL Server para administrar encuestas dinámicas, compartir un enlace público y consultar respuestas.
 
+## Inicio rápido: levantar el proyecto y acceder
+
+1. En SQL Server Management Studio, ejecute `ScriptsSQL\AcmeEncuestasDB.sql` en una instancia compatible con SQL Server 2016 SP1 o posterior.
+2. Verifique que `AcmeEncuestasConnection` en `Web.config` apunte a esa instancia y base de datos. El valor inicial de Data Source usa `.\SQLEXPRESS02` y autenticación integrada; ajústelo si su instancia es distinta.
+3. Abra `AcmeEncuestasWeb.sln` con Visual Studio 2022 o posterior, restaure los paquetes NuGet y ejecute el proyecto con IIS Express.
+4. Cuando se abra el navegador, acceda a `/Account/Login` en la URL local que inició IIS Express.
+5. Para la cuenta de demostración creada por el script, use las siguientes credenciales:
+ Usuario: `admin` Contraseña: `Admin123*`.
+
+Si SQL Server no está iniciado o la cadena de conexión no apunta a la instancia correcta, la aplicación no podrá acceder a los datos.
+
 ## Funcionalidades
 
 - Login con usuario y contraseña.
@@ -32,12 +43,3 @@ Los valores históricos en texto plano se cifran gradualmente cuando se consulta
 Los procedimientos usan parámetros tipados/TVP y `OFFSET/FETCH` para cargar solo la página solicitada. Se evita `NOLOCK`, que podría devolver lecturas no confirmadas o inconsistentes. El índice de respuestas por encuesta, fecha e identificador soporta la paginación.
 
 Como las respuestas están cifradas en la base de datos, la búsqueda se realiza en la aplicación después de descifrar cada lote paginado. Por ello, cada búsqueda revisa todas las respuestas de la encuesta, aunque limita las filas mantenidas en memoria a los lotes y a la página solicitada.
-
-## Configuración y ejecución
-
-1. Abra `ScriptsSQL\AcmeEncuestasDB.sql` en SQL Server Management Studio y ejecute el script en una instancia compatible con SQL Server 2016 SP1 o posterior.
-2. Revise la cadena `AcmeEncuestasConnection` en `Web.config`. El valor inicial apunta a `.\` con autenticación integrada; ajuste `Data Source` según su instancia.
-3. Abra `AcmeEncuestasWeb.sln` en Visual Studio 2022 o posterior, restaure los paquetes NuGet y ejecute con IIS Express.
-4. Inicie sesión en `/Account/Login`.
-
-El script crea un usuario de demostración: `admin` / `Admin123*`. 
