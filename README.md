@@ -6,12 +6,17 @@ Aplicación web ASP.NET MVC 5 con C# y SQL Server para administrar encuestas din
 
 1. En SQL Server Management Studio, ejecute `ScriptsSQL\AcmeEncuestasDB.sql` en una instancia compatible con SQL Server 2016 SP1 o posterior.
 2. Verifique que `AcmeEncuestasConnection` en `Web.config` apunte a esa instancia y base de datos. El valor inicial de Data Source usa `.\SQLEXPRESS02` y autenticación integrada; ajústelo si su instancia es distinta.
-3. Abra `AcmeEncuestasWeb.sln` con Visual Studio 2022 o posterior, restaure los paquetes NuGet y ejecute el proyecto con IIS Express.
-4. Cuando se abra el navegador, acceda a `/Account/Login` en la URL local que inició IIS Express.
-5. Para la cuenta de demostración creada por el script, use las siguientes credenciales:
+3. Abra `AcmeEncuestasWeb.sln` con Visual Studio 2022 o posterior y restaure los paquetes NuGet.
+4. En Visual Studio, seleccione **Compilar > Recompilar solución**.
+5. Ejecute el proyecto con IIS Express y, cuando se abra el navegador, acceda a `/Account/Login` en la URL local que inició IIS Express.
+6. Para la cuenta de demostración creada por el script, use las siguientes credenciales:
  Usuario: `admin` Contraseña: `Admin123*`.
 
 Si SQL Server no está iniciado o la cadena de conexión no apunta a la instancia correcta, la aplicación no podrá acceder a los datos.
+
+### Compilación de C# en IIS Express
+
+El proyecto usa el compilador integrado de .NET Framework 4.8 y ya no requiere `bin\roslyn\csc.exe` ni el paquete `Microsoft.CodeDom.Providers.DotNetCompilerPlatform`. Restaure los paquetes, recompila la solución y reinicie IIS Express.
 
 Al ejecutar el script también se crean dos encuestas para `admin`: **Demo: satisfacción del servicio**, con 55 respuestas de ejemplo y campos de texto, número y fecha; y **Demo: encuesta sin respuestas**, para probar la edición de campos y el estado vacío. Las 55 respuestas permiten probar la paginación. Inicie sesión y abra **Encuestas** para verlas y copiar sus enlaces públicos. Busque, por ejemplo, “Andrea” en los resultados de la encuesta de satisfacción. 
 ## Funcionalidades
