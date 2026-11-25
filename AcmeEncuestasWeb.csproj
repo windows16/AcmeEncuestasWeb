@@ -129,6 +129,7 @@
     <Compile Include="ViewModels\LoginViewModel.cs" />
     <Compile Include="Data\UsuarioRepository.cs" />
     <Compile Include="Services\PasswordHasher.cs" />
+    <Compile Include="Services\SurveyValueProtector.cs" />
     <Compile Include="Services\AuthService.cs" />
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\ErrorController.cs" />

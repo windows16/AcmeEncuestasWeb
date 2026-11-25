@@ -4,6 +4,7 @@ using System.Configuration;
 using System.Data;
 using System.Data.SqlClient;
 using AcmeEncuestasWeb.Models;
+using AcmeEncuestasWeb.Services;
 using AcmeEncuestasWeb.ViewModels;
 
 namespace AcmeEncuestasWeb.Data
@@ -289,12 +290,13 @@ namespace AcmeEncuestasWeb.Data
             var tablaValores = new DataTable();
             tablaValores.Columns.Add("CampoId", typeof(int));
             tablaValores.Columns.Add("Valor", typeof(string));
+            tablaValores.Columns.Add("EsVacio", typeof(bool));
 
             if (valores != null)
             {
                 foreach (var v in valores)
                 {
-                    tablaValores.Rows.Add(v.CampoId, (object)v.Valor ?? DBNull.Value);
+                    tablaValores.Rows.Add(v.CampoId, (object)v.Valor ?? DBNull.Value, v.EsVacio);
                 }
             }
 
@@ -307,7 +309,7 @@ namespace AcmeEncuestasWeb.Data
 
                 var paramValores = new SqlParameter("@Valores", SqlDbType.Structured)
                 {
-                    TypeName = "dbo.ValorCampoRespuestaType",
+                    TypeName = "dbo.ValorCampoRespuestaCifradoType",
                     Value = tablaValores
                 };
                 cmd.Parameters.Add(paramValores);
@@ -319,9 +321,10 @@ namespace AcmeEncuestasWeb.Data
         }
 
         
-        public ResultadosViewModel ObtenerResultados(int encuestaId, int usuarioId)
+        public ResultadosViewModel ObtenerResultados(int encuestaId, int usuarioId, int pagina)
         {
             var modelo = new ResultadosViewModel();
+            var valoresLegados = new List<ValorCampoLegado>();
 
             using (var conn = new SqlConnection(_connectionString))
             using (var cmd = new SqlCommand("dbo.sp_ObtenerResultadosEncuesta", conn))
@@ -329,6 +332,8 @@ namespace AcmeEncuestasWeb.Data
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.Add(new SqlParameter("@EncuestaId", SqlDbType.Int) { Value = encuestaId });
                 cmd.Parameters.Add(new SqlParameter("@UsuarioId", SqlDbType.Int) { Value = usuarioId });
+                cmd.Parameters.Add(new SqlParameter("@Pagina", SqlDbType.Int) { Value = Math.Max(1, pagina) });
+                cmd.Parameters.Add(new SqlParameter("@TamanoPagina", SqlDbType.Int) { Value = 50 });
 
                 conn.Open();
 
@@ -342,6 +347,8 @@ namespace AcmeEncuestasWeb.Data
                         modelo.Descripcion = reader.IsDBNull(2) ? string.Empty : reader.GetString(2);
                         modelo.LinkUnico = reader.GetString(3);
                         modelo.TotalRespuestas = reader.GetInt32(5);
+                        modelo.PaginaActual = reader.GetInt32(6);
+                        modelo.TotalPaginas = reader.GetInt32(7);
                     }
                     else
                     {
@@ -389,16 +396,67 @@ namespace AcmeEncuestasWeb.Data
 
                             if (!reader.IsDBNull(3))
                             {
-                                int campoId = reader.GetInt32(3);
-                                string valor = reader.IsDBNull(4) ? string.Empty : reader.GetString(4);
+                                int valorId = reader.GetInt32(3);
+                                int campoId = reader.GetInt32(4);
+                                string valorAlmacenado = reader.IsDBNull(5) ? null : reader.GetString(5);
+                                byte formato = reader.GetByte(6);
+                                string valor = SurveyValueProtector.Unprotect(valorAlmacenado, formato) ?? string.Empty;
                                 fila.ValoresPorCampo[campoId] = valor;
+
+                                if (valorAlmacenado != null && formato == 0)
+                                {
+                                    valoresLegados.Add(new ValorCampoLegado
+                                    {
+                                        ValorId = valorId,
+                                        ValorAnterior = valorAlmacenado,
+                                        ValorCifrado = SurveyValueProtector.Protect(valorAlmacenado)
+                                    });
+                                }
                             }
                         }
                     }
                 }
+
+                MigrarValoresLegados(conn, valoresLegados);
             }
 
             return modelo;
+        }
+
+        private static void MigrarValoresLegados(SqlConnection conn, List<ValorCampoLegado> valores)
+        {
+            if (valores.Count == 0)
+            {
+                return;
+            }
+
+            var tabla = new DataTable();
+            tabla.Columns.Add("ValorId", typeof(int));
+            tabla.Columns.Add("ValorAnterior", typeof(string));
+            tabla.Columns.Add("ValorCifrado", typeof(string));
+
+            foreach (var valor in valores)
+            {
+                tabla.Rows.Add(valor.ValorId, valor.ValorAnterior, valor.ValorCifrado);
+            }
+
+            using (var cmd = new SqlCommand("dbo.sp_MigrarValoresCampoCifrados", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add(new SqlParameter("@Valores", SqlDbType.Structured)
+                {
+                    TypeName = "dbo.ValorCampoCifradoType",
+                    Value = tabla
+                });
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        private sealed class ValorCampoLegado
+        {
+            public int ValorId { get; set; }
+            public string ValorAnterior { get; set; }
+            public string ValorCifrado { get; set; }
         }
     }
 }

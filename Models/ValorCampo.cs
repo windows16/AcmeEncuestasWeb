@@ -9,5 +9,6 @@ namespace AcmeEncuestasWeb.Models
         public int CampoId { get; set; }
         public string Valor { get; set; }
         public string TituloCampo { get; set; }
+        public bool EsVacio { get; set; }
     }
 }

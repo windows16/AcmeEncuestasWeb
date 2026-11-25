@@ -149,6 +149,18 @@ BEGIN
 END
 GO
 
+IF NOT EXISTS (
+    SELECT 1 FROM sys.indexes
+    WHERE object_id = OBJECT_ID(N'dbo.RespuestasEncuesta')
+      AND name = N'IX_RespuestasEncuesta_Encuesta_Fecha'
+)
+BEGIN
+    CREATE NONCLUSTERED INDEX IX_RespuestasEncuesta_Encuesta_Fecha
+        ON dbo.RespuestasEncuesta (EncuestaId, FechaRespuesta DESC, RespuestaId DESC)
+        INCLUDE (IpCliente);
+END
+GO
+
 -- ==============================================================================
 -- Tabla ValoresCampo
 -- ==============================================================================
@@ -159,6 +171,7 @@ BEGIN
         RespuestaId INT NOT NULL,
         CampoId INT NOT NULL,
         Valor NVARCHAR(MAX) NULL,
+        FormatoCifrado TINYINT NOT NULL CONSTRAINT DF_ValoresCampo_FormatoCifrado DEFAULT (0),
         CONSTRAINT PK_ValoresCampo PRIMARY KEY CLUSTERED (ValorId),
         CONSTRAINT FK_ValoresCampo_RespuestasEncuesta FOREIGN KEY (RespuestaId) 
             REFERENCES dbo.RespuestasEncuesta (RespuestaId) ON DELETE CASCADE,
@@ -168,6 +181,14 @@ BEGIN
 
     CREATE NONCLUSTERED INDEX IX_ValoresCampo_RespuestaId ON dbo.ValoresCampo (RespuestaId);
     CREATE NONCLUSTERED INDEX IX_ValoresCampo_CampoId ON dbo.ValoresCampo (CampoId);
+END
+GO
+
+IF COL_LENGTH(N'dbo.ValoresCampo', N'FormatoCifrado') IS NULL
+BEGIN
+    ALTER TABLE dbo.ValoresCampo
+        ADD FormatoCifrado TINYINT NOT NULL
+            CONSTRAINT DF_ValoresCampo_FormatoCifrado DEFAULT (0);
 END
 GO
 
@@ -332,9 +353,9 @@ BEGIN
         e.EsActiva,
         e.FechaCreacion,
         e.FechaModificacion,
-        (SELECT COUNT(1) FROM dbo.CamposEncuesta c WITH (NOLOCK) WHERE c.EncuestaId = e.EncuestaId) AS TotalCampos,
-        (SELECT COUNT(1) FROM dbo.RespuestasEncuesta r WITH (NOLOCK) WHERE r.EncuestaId = e.EncuestaId) AS TotalRespuestas
-    FROM dbo.Encuestas e WITH (NOLOCK)
+        (SELECT COUNT(1) FROM dbo.CamposEncuesta c WHERE c.EncuestaId = e.EncuestaId) AS TotalCampos,
+        (SELECT COUNT(1) FROM dbo.RespuestasEncuesta r WHERE r.EncuestaId = e.EncuestaId) AS TotalRespuestas
+    FROM dbo.Encuestas e
     WHERE e.UsuarioId = @UsuarioId AND e.EsActiva = 1
     ORDER BY e.FechaCreacion DESC;
 END
@@ -361,7 +382,7 @@ BEGIN
         EsActiva, 
         FechaCreacion, 
         FechaModificacion
-    FROM dbo.Encuestas WITH (NOLOCK)
+    FROM dbo.Encuestas
     WHERE EncuestaId = @EncuestaId AND UsuarioId = @UsuarioId AND EsActiva = 1;
 
     -- Campos dinamicos
@@ -374,8 +395,8 @@ BEGIN
         c.TipoCampoId, 
         t.Nombre AS TipoCampoNombre, 
         c.Orden
-    FROM dbo.CamposEncuesta c WITH (NOLOCK)
-    INNER JOIN dbo.TiposCampo t WITH (NOLOCK) ON c.TipoCampoId = t.TipoCampoId
+    FROM dbo.CamposEncuesta c
+    INNER JOIN dbo.TiposCampo t ON c.TipoCampoId = t.TipoCampoId
     WHERE c.EncuestaId = @EncuestaId
       AND EXISTS (
           SELECT 1
@@ -405,15 +426,40 @@ END
 GO
 
 -- ==============================================================================
--- dbo.ValorCampoRespuestaType
--- Tipo estructurado (TVP) para almacenar los valores de cada campo
--- ==============================================================================
-IF TYPE_ID(N'dbo.ValorCampoRespuestaType') IS NULL
+IF TYPE_ID(N'dbo.ValorCampoRespuestaCifradoType') IS NULL
 BEGIN
-    CREATE TYPE dbo.ValorCampoRespuestaType AS TABLE (
+    CREATE TYPE dbo.ValorCampoRespuestaCifradoType AS TABLE (
         CampoId INT NOT NULL,
-        Valor NVARCHAR(MAX) NULL
+        Valor NVARCHAR(MAX) NULL,
+        EsVacio BIT NOT NULL
     );
+END
+GO
+
+IF TYPE_ID(N'dbo.ValorCampoCifradoType') IS NULL
+BEGIN
+    CREATE TYPE dbo.ValorCampoCifradoType AS TABLE (
+        ValorId INT NOT NULL,
+        ValorAnterior NVARCHAR(MAX) NOT NULL,
+        ValorCifrado NVARCHAR(MAX) NOT NULL
+    );
+END
+GO
+
+CREATE OR ALTER PROCEDURE dbo.sp_MigrarValoresCampoCifrados
+    @Valores dbo.ValorCampoCifradoType READONLY
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE vc
+    SET vc.Valor = v.ValorCifrado,
+        vc.FormatoCifrado = 1
+    FROM dbo.ValoresCampo vc
+    INNER JOIN @Valores v ON v.ValorId = vc.ValorId
+    WHERE vc.FormatoCifrado = 0
+      AND DATALENGTH(vc.Valor) = DATALENGTH(v.ValorAnterior)
+      AND vc.Valor = v.ValorAnterior;
 END
 GO
 
@@ -436,7 +482,7 @@ BEGIN
         LinkUnico, 
         EsActiva, 
         FechaCreacion
-    FROM dbo.Encuestas WITH (NOLOCK)
+    FROM dbo.Encuestas
     WHERE LinkUnico = @LinkUnico AND EsActiva = 1;
 
     -- Campos dinamicos
@@ -449,9 +495,9 @@ BEGIN
         c.TipoCampoId, 
         t.Nombre AS TipoCampoNombre, 
         c.Orden
-    FROM dbo.CamposEncuesta c WITH (NOLOCK)
-    INNER JOIN dbo.Encuestas e WITH (NOLOCK) ON c.EncuestaId = e.EncuestaId
-    INNER JOIN dbo.TiposCampo t WITH (NOLOCK) ON c.TipoCampoId = t.TipoCampoId
+    FROM dbo.CamposEncuesta c
+    INNER JOIN dbo.Encuestas e ON c.EncuestaId = e.EncuestaId
+    INNER JOIN dbo.TiposCampo t ON c.TipoCampoId = t.TipoCampoId
     WHERE e.LinkUnico = @LinkUnico AND e.EsActiva = 1
     ORDER BY c.Orden ASC, c.CampoId ASC;
 END
@@ -464,7 +510,7 @@ GO
 CREATE OR ALTER PROCEDURE dbo.sp_GuardarRespuestaEncuesta
     @LinkUnico VARCHAR(36),
     @IpCliente VARCHAR(45) = NULL,
-    @Valores dbo.ValorCampoRespuestaType READONLY
+    @Valores dbo.ValorCampoRespuestaCifradoType READONLY
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -486,7 +532,7 @@ BEGIN
         DECLARE @EncuestaId INT;
 
         SELECT @EncuestaId = EncuestaId
-        FROM dbo.Encuestas WITH (NOLOCK)
+        FROM dbo.Encuestas
         WHERE LinkUnico = @LinkUnico AND EsActiva = 1;
 
         IF (@EncuestaId IS NULL)
@@ -510,24 +556,10 @@ BEGIN
             LEFT JOIN @Valores v ON v.CampoId = c.CampoId
             WHERE c.EncuestaId = @EncuestaId
               AND c.EsRequerido = 1
-              AND (v.CampoId IS NULL OR NULLIF(LTRIM(RTRIM(v.Valor)), '') IS NULL)
+              AND (v.CampoId IS NULL OR v.EsVacio = 1)
         )
         BEGIN
             RAISERROR('La respuesta no incluye todos los campos obligatorios.', 16, 1);
-        END
-
-        IF EXISTS (
-            SELECT 1
-            FROM @Valores v
-            INNER JOIN dbo.CamposEncuesta c ON c.CampoId = v.CampoId AND c.EncuestaId = @EncuestaId
-            WHERE NULLIF(LTRIM(RTRIM(v.Valor)), '') IS NOT NULL
-              AND (
-                  (c.TipoCampoId = 2 AND TRY_CONVERT(DECIMAL(38, 10), v.Valor) IS NULL)
-                  OR (c.TipoCampoId = 3 AND TRY_CONVERT(DATE, v.Valor, 23) IS NULL)
-              )
-        )
-        BEGIN
-            RAISERROR('Uno o más valores no corresponden al tipo de campo configurado.', 16, 1);
         END
 
         -- Insertar cabecera de la respuesta
@@ -537,13 +569,14 @@ BEGIN
         DECLARE @RespuestaId INT = SCOPE_IDENTITY();
 
         -- Insertar los valores ingresados para cada campo
-        INSERT INTO dbo.ValoresCampo (RespuestaId, CampoId, Valor)
+        INSERT INTO dbo.ValoresCampo (RespuestaId, CampoId, Valor, FormatoCifrado)
         SELECT 
             @RespuestaId,
             v.CampoId,
-            v.Valor
+            v.Valor,
+            CASE WHEN v.Valor IS NULL THEN 0 ELSE 1 END
         FROM @Valores v
-        INNER JOIN dbo.CamposEncuesta c WITH (NOLOCK) ON v.CampoId = c.CampoId
+        INNER JOIN dbo.CamposEncuesta c ON v.CampoId = c.CampoId
         WHERE c.EncuestaId = @EncuestaId;
 
         COMMIT TRANSACTION;
@@ -570,10 +603,32 @@ GO
 -- ==============================================================================
 CREATE OR ALTER PROCEDURE dbo.sp_ObtenerResultadosEncuesta
     @EncuestaId INT,
-    @UsuarioId INT
+    @UsuarioId INT,
+    @Pagina INT = 1,
+    @TamanoPagina INT = 50
 AS
 BEGIN
     SET NOCOUNT ON;
+
+    IF (@TamanoPagina < 1 OR @TamanoPagina > 100)
+    BEGIN
+        SET @TamanoPagina = 50;
+    END
+
+    DECLARE @TotalRespuestas INT = (
+        SELECT COUNT(1)
+        FROM dbo.RespuestasEncuesta r
+        INNER JOIN dbo.Encuestas e ON e.EncuestaId = r.EncuestaId
+        WHERE r.EncuestaId = @EncuestaId
+          AND e.UsuarioId = @UsuarioId
+    );
+    DECLARE @TotalPaginas INT = CASE
+        WHEN @TotalRespuestas = 0 THEN 1
+        ELSE CEILING(@TotalRespuestas * 1.0 / @TamanoPagina)
+    END;
+
+    IF (@Pagina < 1) SET @Pagina = 1;
+    IF (@Pagina > @TotalPaginas) SET @Pagina = @TotalPaginas;
 
     -- Resumen de la Encuesta
     SELECT 
@@ -582,8 +637,10 @@ BEGIN
         e.Descripcion,
         e.LinkUnico,
         e.FechaCreacion,
-        (SELECT COUNT(1) FROM dbo.RespuestasEncuesta r WITH (NOLOCK) WHERE r.EncuestaId = e.EncuestaId) AS TotalRespuestas
-    FROM dbo.Encuestas e WITH (NOLOCK)
+        @TotalRespuestas AS TotalRespuestas,
+        @Pagina AS PaginaActual,
+        @TotalPaginas AS TotalPaginas
+    FROM dbo.Encuestas e
     WHERE e.EncuestaId = @EncuestaId AND e.UsuarioId = @UsuarioId;
 
     -- Columnas de Campos configurados
@@ -593,7 +650,7 @@ BEGIN
         c.TituloCampo,
         c.TipoCampoId,
         c.Orden
-    FROM dbo.CamposEncuesta c WITH (NOLOCK)
+    FROM dbo.CamposEncuesta c
     WHERE c.EncuestaId = @EncuestaId
       AND EXISTS (
           SELECT 1
@@ -602,15 +659,26 @@ BEGIN
       )
     ORDER BY c.Orden ASC, c.CampoId ASC;
 
-    -- Respuestas individuales y sus valores registrados
+    -- Página solicitada y valores registrados
+    ;WITH RespuestasPagina AS
+    (
+        SELECT RespuestaId, EncuestaId, FechaRespuesta, IpCliente
+        FROM dbo.RespuestasEncuesta
+        WHERE EncuestaId = @EncuestaId
+        ORDER BY FechaRespuesta DESC, RespuestaId DESC
+        OFFSET ((@Pagina - 1) * @TamanoPagina) ROWS
+        FETCH NEXT @TamanoPagina ROWS ONLY
+    )
     SELECT 
         r.RespuestaId,
         r.FechaRespuesta,
         r.IpCliente,
+        v.ValorId,
         v.CampoId,
-        v.Valor
-    FROM dbo.RespuestasEncuesta r WITH (NOLOCK)
-    LEFT JOIN dbo.ValoresCampo v WITH (NOLOCK) ON r.RespuestaId = v.RespuestaId
+        v.Valor,
+        v.FormatoCifrado
+    FROM RespuestasPagina r
+    LEFT JOIN dbo.ValoresCampo v ON r.RespuestaId = v.RespuestaId
     WHERE r.EncuestaId = @EncuestaId
       AND EXISTS (
           SELECT 1

@@ -8,8 +8,8 @@ Aplicación web ASP.NET MVC 5 con C# y SQL Server para administrar encuestas din
 - Creación, modificación y eliminación lógica de encuestas y sus campos.
 - Campos dinámicos de texto, número y fecha, con indicador obligatorio.
 - Enlace público único por encuesta; responder no requiere iniciar sesión.
-- Validación de campos y tipos tanto en la aplicación como en el procedimiento almacenado.
-- Consulta privada de respuestas, ordenadas por fecha, con sus valores por campo.
+- Validación de campos obligatorios e integridad referencial en SQL Server, y validación de tipos en la aplicación antes de cifrar.
+- Consulta privada y paginada de respuestas, ordenadas por fecha, con sus valores por campo.
 - Protección de los formularios POST con token antifalsificación y consultas SQL parametrizadas.
 
 ## Diseño
@@ -20,9 +20,15 @@ La aplicación separa Controllers, Services con la logica de negocio y repositor
 
 Para conservar la relación entre resultados históricos y su definición, el procedimiento no permite cambiar los campos de una encuesta que ya tiene respuestas; sí permite actualizar su nombre y descripción. Las encuestas sin respuestas pueden modificar libremente sus campos.
 
-## Seguridad de credenciales
+## Seguridad de datos
 
-Las contraseñas no se almacenan en texto plano ni se cifran de forma reversible. `PasswordHasher` usa PBKDF2-HMAC-SHA256 con salt aleatorio por usuario y compara hashes en tiempo constante. Esto protege las credenciales. los valores de respuesta se guardan como datos de encuesta en SQL Server y no cuentan con cifrado de campo.
+Las contraseñas se almacenan como hash PBKDF2-HMAC-SHA256 con salt individual; no se cifran de forma reversible. Los valores de respuesta se protegen con `MachineKey.Protect` de ASP.NET antes de enviarlos a SQL Server y se validan/descifran al preparar una página de resultados. El formato lleva versión para poder evolucionar la protección. La clave no se guarda en la base de datos. En instalaciones de un solo servidor se usan las claves protegidas del entorno ASP.NET; en una granja todos los nodos deben compartir una configuración `machineKey` protegida y administrada fuera del repositorio. Mantenga restringidos los permisos de la identidad IIS y proteja las copias de seguridad antiguas, que podrían contener respuestas sin cifrar.
+
+Los valores históricos en texto plano se cifran gradualmente cuando se consulta su página de resultados, en lotes de hasta 50 respuestas. Los resultados se consultan paginados para limitar memoria y transferencia; el orden es por fecha y un identificador estable.
+
+## Consultas y consistencia
+
+Los procedimientos usan parámetros tipados/TVP y `OFFSET/FETCH` para cargar solo la página solicitada. Se evita `NOLOCK`, que podría devolver lecturas no confirmadas o inconsistentes. El índice de respuestas por encuesta, fecha e identificador soporta la paginación.
 
 ## Configuración y ejecución
 

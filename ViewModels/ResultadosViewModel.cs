@@ -14,6 +14,8 @@ namespace AcmeEncuestasWeb.ViewModels
         public string LinkUnico { get; set; }
         public string UrlPublica { get; set; }
         public int TotalRespuestas { get; set; }
+        public int PaginaActual { get; set; }
+        public int TotalPaginas { get; set; }
         public List<ColumnaResultadoViewModel> Columnas { get; set; }
         public List<FilaResultadoViewModel> Filas { get; set; }
 

@@ -37,7 +37,7 @@ namespace AcmeEncuestasWeb.Data
 
             const string sql = @"
                 SELECT UsuarioId, NombreCompleto, Username, Email, PasswordHash, PasswordSalt, EsActivo, FechaCreacion, UltimoLogin
-                FROM dbo.Usuarios WITH (NOLOCK)
+                FROM dbo.Usuarios
                 WHERE Username = @Username AND EsActivo = 1;";
 
             using (var connection = new SqlConnection(_connectionString))

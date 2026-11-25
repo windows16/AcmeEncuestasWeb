@@ -144,18 +144,23 @@ namespace AcmeEncuestasWeb.Services
         {
             if (model == null) throw new ArgumentNullException(nameof(model));
 
-            var valores = model.Campos != null ? model.Campos.Select(c => new ValorCampo
+            var valores = model.Campos != null ? model.Campos.Select(c =>
             {
-                CampoId = c.CampoId,
-                Valor = c.Valor?.Trim()
+                var valor = c.Valor;
+                return new ValorCampo
+                {
+                    CampoId = c.CampoId,
+                    Valor = SurveyValueProtector.Protect(valor),
+                    EsVacio = string.IsNullOrWhiteSpace(valor)
+                };
             }).ToList() : new List<ValorCampo>();
 
             return _encuestaRepository.GuardarRespuesta(model.LinkUnico, ipCliente, valores);
         }
 
-        public ResultadosViewModel ObtenerResultados(int encuestaId, int usuarioId)
+        public ResultadosViewModel ObtenerResultados(int encuestaId, int usuarioId, int pagina)
         {
-            return _encuestaRepository.ObtenerResultados(encuestaId, usuarioId);
+            return _encuestaRepository.ObtenerResultados(encuestaId, usuarioId, pagina);
         }
     }
 }
