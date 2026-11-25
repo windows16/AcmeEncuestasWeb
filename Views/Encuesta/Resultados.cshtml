@@ -73,8 +73,11 @@
                             <td class="text-nowrap">@fila.FechaRespuesta.ToString("dd/MM/yyyy HH:mm")</td>
                             @foreach (var columna in Model.Columnas)
                             {
+                                var valor = fila.ValoresPorCampo.ContainsKey(columna.CampoId)
+                                    ? fila.ValoresPorCampo[columna.CampoId]
+                                    : string.Empty;
                                 <td>
-                                    @(fila.ValoresPorCampo.TryGetValue(columna.CampoId, out var valor) ? valor : "")
+                                    @valor
                                 </td>
                             }
                         </tr>
